@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PyLearn — Learn Python Step by Step</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- ===== NAV ===== -->
+<nav>
+  <a href="index.html" class="nav-logo">
+    <span class="logo-bracket">[</span><span class="logo-py">py</span><span>learn</span><span class="logo-bracket">]</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="learn.html">Learn</a></li>
+    <li><a href="projects.html">Projects</a></li>
+    <li><a href="learn.html" class="btn-nav">Start Coding →</a></li>
+  </ul>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span class="dot"></span>
+      Free · No signup required · Open source
+    </div>
+    <h1>Learn <span class="highlight">Python</span><br>from zero to pro</h1>
+    <p>Step-by-step lessons, hands-on projects, and quizzes — everything you need to master Python, at your own pace.</p>
+    <div class="hero-actions">
+      <a href="learn.html" class="btn btn-primary">Start Learning →</a>
+      <a href="projects.html" class="btn btn-secondary">Browse Projects</a>
+    </div>
+
+    <div class="code-preview">
+      <div class="code-preview-bar">
+        <span class="code-dot red"></span>
+        <span class="code-dot yellow"></span>
+        <span class="code-dot green"></span>
+        <span class="code-preview-title">lesson_01.py</span>
+      </div>
+      <pre><span class="c-cm"># Your first Python program</span>
+<span class="c-fn">print</span>(<span class="c-str">"Hello, World!"</span>)
+
+<span class="c-cm"># Variables store data</span>
+<span class="c-var">name</span> = <span class="c-fn">input</span>(<span class="c-str">"What's your name? "</span>)
+<span class="c-var">age</span> = <span class="c-fn">int</span>(<span class="c-fn">input</span>(<span class="c-str">"Your age: "</span>))
+
+<span class="c-fn">print</span>(<span class="c-str">f"Hi <span class="c-var">{name}</span>! In 10 years you'll be <span class="c-var">{age + 10}</span>."</span>)</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ===== STATS ===== -->
+<div class="stats-strip">
+  <div class="stats-grid">
+    <div>
+      <span class="stat-num">11+</span>
+      <span class="stat-lbl">Lessons</span>
+    </div>
+    <div>
+      <span class="stat-num">12</span>
+      <span class="stat-lbl">Projects</span>
+    </div>
+    <div>
+      <span class="stat-num">6</span>
+      <span class="stat-lbl">Topics</span>
+    </div>
+    <div>
+      <span class="stat-num">Free</span>
+      <span class="stat-lbl">Forever</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CURRICULUM OVERVIEW ===== -->
+<section>
+  <div class="container">
+    <div class="section-label">CURRICULUM</div>
+    <h2 class="section-title">Everything you need to know</h2>
+    <p class="section-desc">Structured into 6 clear sections that build on each other — from absolute basics to real projects.</p>
+
+    <div class="courses-grid" style="margin-top:3rem;">
+      <a href="learn.html?section=basics" class="course-card" style="--card-accent: var(--python-blue)">
+        <div class="course-icon">🐍</div>
+        <span class="course-tag">SECTION 1</span>
+        <h3>The Basics</h3>
+        <p>Print, variables, data types, input/output, operators — the foundations every Python developer knows.</p>
+        <div class="course-meta"><span>4 lessons</span><span>~33 min</span></div>
+      </a>
+      <a href="learn.html?section=control" class="course-card" style="--card-accent: var(--purple)">
+        <div class="course-icon">🔀</div>
+        <span class="course-tag">SECTION 2</span>
+        <h3>Control Flow</h3>
+        <p>Make decisions with if/elif/else and repeat code with for and while loops.</p>
+        <div class="course-meta"><span>2 lessons</span><span>~27 min</span></div>
+      </a>
+      <a href="learn.html?section=collections" class="course-card" style="--card-accent: var(--python-yellow)">
+        <div class="course-icon">📋</div>
+        <span class="course-tag">SECTION 3</span>
+        <h3>Collections</h3>
+        <p>Store and organise data with lists, dictionaries, tuples, and sets.</p>
+        <div class="course-meta"><span>2 lessons</span><span>~27 min</span></div>
+      </a>
+      <a href="learn.html?section=functions" class="course-card" style="--card-accent: var(--green)">
+        <div class="course-icon">⚙️</div>
+        <span class="course-tag">SECTION 4</span>
+        <h3>Functions</h3>
+        <p>Write reusable code blocks, understand scope, use built-in functions, and create your own.</p>
+        <div class="course-meta"><span>1 lesson</span><span>~15 min</span></div>
+      </a>
+      <a href="learn.html?section=files" class="course-card" style="--card-accent: var(--orange)">
+        <div class="course-icon">🛡️</div>
+        <span class="course-tag">SECTION 5</span>
+        <h3>Files & Errors</h3>
+        <p>Handle errors gracefully and read/write files — essential for any real program.</p>
+        <div class="course-meta"><span>1 lesson</span><span>~12 min</span></div>
+      </a>
+      <a href="learn.html?section=oop" class="course-card" style="--card-accent: var(--red)">
+        <div class="course-icon">🏗️</div>
+        <span class="course-tag">SECTION 6</span>
+        <h3>Object-Oriented Python</h3>
+        <p>Model the world with classes, objects, and inheritance — the key to large-scale Python programs.</p>
+        <div class="course-meta"><span>1 lesson</span><span>~20 min</span></div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== YOUR PROGRESS ===== -->
+<section style="background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+  <div class="container" style="text-align:center; max-width: 600px;">
+    <div class="section-label">YOUR PROGRESS</div>
+    <h2 class="section-title" style="margin-bottom:0.5rem;">Keep going!</h2>
+    <p class="section-desc" style="margin: 0 auto 1.5rem;">Progress is saved automatically in your browser.</p>
+    <div class="progress-label"><span class="progress-count">0 / 11 lessons</span></div>
+    <div class="progress-wrap" style="max-width:100%">
+      <div class="progress-fill" style="width:0%"></div>
+    </div>
+    <a href="learn.html" class="btn btn-primary" style="margin-top:1.5rem;">Continue Learning →</a>
+  </div>
+</section>
+
+<!-- ===== PROJECTS PREVIEW ===== -->
+<section>
+  <div class="container">
+    <div class="section-label">PROJECTS</div>
+    <h2 class="section-title">Build real things</h2>
+    <p class="section-desc">Theory is only half the story. Practice with guided projects that range from beginner-friendly to genuinely challenging.</p>
+
+    <div class="courses-grid" style="margin-top:2.5rem;">
+      <div class="course-card" style="--card-accent: var(--green); cursor:default;">
+        <div class="course-icon">🎲</div>
+        <span class="course-tag diff-beginner">BEGINNER</span>
+        <h3>Number Guessing Game</h3>
+        <p>Use loops and conditionals to build a game where the computer picks a secret number and gives hints.</p>
+      </div>
+      <div class="course-card" style="--card-accent: var(--python-yellow); cursor:default;">
+        <div class="course-icon">🔐</div>
+        <span class="course-tag diff-intermediate">INTERMEDIATE</span>
+        <h3>Password Generator</h3>
+        <p>Generate secure passwords with configurable character sets using strings and the random module.</p>
+      </div>
+      <div class="course-card" style="--card-accent: var(--red); cursor:default;">
+        <div class="course-icon">🐍</div>
+        <span class="course-tag diff-advanced">ADVANCED</span>
+        <h3>Pygame Snake Game</h3>
+        <p>Build the classic Snake game using Pygame with collision detection, scoring, and game loop logic.</p>
+      </div>
+    </div>
+    <div style="text-align:center; margin-top:2rem;">
+      <a href="projects.html" class="btn btn-secondary">View All 12 Projects →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <div class="footer-logo"><span style="color:var(--python-yellow)">[</span><span style="color:var(--python-blue)">py</span>learn<span style="color:var(--python-yellow)">]</span></div>
+  <p style="margin-top:0.5rem;">A free, open-source Python learning site · Hosted on GitHub Pages</p>
+  <p style="margin-top:0.35rem;font-size:0.8rem;">Built with HTML, CSS & vanilla JavaScript · No frameworks, no accounts, no cost</p>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>
