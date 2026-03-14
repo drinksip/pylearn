@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Python IDE — PyLearn</title>
+  <link rel="stylesheet" href="css/style.css" />
+
+  <!-- CodeMirror -->
+  <link  rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
+  <link  rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+
+  <!-- Pyodide -->
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.26.0/full/pyodide.js"></script>
+
+  <!-- Puter.js for AI marking -->
+  <script src="https://js.puter.com/v2/"></script>
+
+  <style>
+    /* IDE-specific height fix — override base body scroll */
+    body { overflow: hidden; }
+    @media (max-width: 900px) { body { overflow: auto; } }
+  </style>
+</head>
+<body>
+
+<!-- ===== NAV ===== -->
+<nav>
+  <a href="index.html" class="nav-logo">
+    <span class="logo-bracket">[</span><span class="logo-py">py</span><span>learn</span><span class="logo-bracket">]</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="learn.html">Learn</a></li>
+    <li><a href="ide.html">IDE</a></li>
+    <li><a href="projects.html">Projects</a></li>
+  </ul>
+  <div id="auth-nav"></div>
+</nav>
+
+<!-- ===== IDE LAYOUT ===== -->
+<div class="ide-page-layout">
+
+  <!-- LEFT: Snippet library -->
+  <div class="ide-snippets-panel">
+    <div class="ide-snippets-title">📂 Snippets</div>
+
+    <div style="padding:0 0 0.5rem;">
+      <div style="padding:0.25rem 1rem 0.25rem; font-family:var(--font-mono); font-size:0.65rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em;">Starter</div>
+      <button class="ide-snippet-btn" onclick="loadSnippet('hello')">👋 Hello World</button>
+      <button class="ide-snippet-btn" onclick="loadSnippet('fizzbuzz')">🎮 FizzBuzz</button>
+    </div>
+
+    <div style="padding:0 0 0.5rem;">
+      <div style="padding:0.25rem 1rem 0.25rem; font-family:var(--font-mono); font-size:0.65rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em;">Algorithms</div>
+      <button class="ide-snippet-btn" onclick="loadSnippet('fibonacci')">🔢 Fibonacci</button>
+      <button class="ide-snippet-btn" onclick="loadSnippet('listcomp')">📋 List Comp</button>
+    </div>
+
+    <div style="padding:0 0 0.5rem;">
+      <div style="padding:0.25rem 1rem 0.25rem; font-family:var(--font-mono); font-size:0.65rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em;">Advanced</div>
+      <button class="ide-snippet-btn" onclick="loadSnippet('classes')">🏗️ Classes</button>
+      <button class="ide-snippet-btn" onclick="loadSnippet('decorators')">✨ Decorators</button>
+      <button class="ide-snippet-btn" onclick="loadSnippet('generators')">⚡ Generators</button>
+    </div>
+
+    <div style="padding:0.75rem 1rem 0; border-top:1px solid var(--border); margin-top:0.5rem;">
+      <p style="font-size:0.75rem; color:var(--muted); margin:0;">
+        <strong style="color:var(--text)">Shortcuts</strong><br>
+        <kbd>Ctrl+Enter</kbd> Run<br>
+        <kbd>Tab</kbd> Indent (4 spaces)
+      </p>
+    </div>
+  </div>
+
+  <!-- CENTRE: Editor -->
+  <div class="ide-editor-panel">
+    <div class="ide-panel-bar">
+      <span class="ide-panel-title">📝 editor.py</span>
+      <button class="btn btn-primary" id="ide-run-btn" onclick="runCode()" style="padding:0.35rem 1rem; font-size:0.82rem;">▶ Run</button>
+      <button class="btn btn-secondary" onclick="clearOutput()" style="padding:0.35rem 0.75rem; font-size:0.82rem;">🗑 Clear</button>
+      <button class="btn btn-secondary" onclick="downloadCode()" style="padding:0.35rem 0.75rem; font-size:0.82rem;">⬇ Save</button>
+      <button class="btn btn-secondary" onclick="changeFontSize(-1)" style="padding:0.35rem 0.6rem; font-size:0.82rem;">A−</button>
+      <button class="btn btn-secondary" onclick="changeFontSize(1)"  style="padding:0.35rem 0.6rem; font-size:0.82rem;">A+</button>
+    </div>
+
+    <div class="ide-editor-wrap">
+      <textarea id="ide-editor"># Welcome to the PyLearn IDE! 🐍
+# Real Python 3.11 running in your browser via Pyodide.
+# Press Ctrl+Enter (or click Run) to execute.
+
+print("Hello, World!")
+
+# Try a list comprehension
+squares = [n ** 2 for n in range(1, 11)]
+print("Squares:", squares)
+
+# f-strings
+name = "Python"
+print(f"Welcome to {name} programming!")
+</textarea>
+    </div>
+
+    <div class="ide-status-bar">
+      <span id="ide-status" class="ide-status loading">⏳ Loading Python runtime…</span>
+      <span id="ide-runtime"></span>
+    </div>
+  </div>
+
+  <!-- RIGHT: Output + AI marking -->
+  <div class="ide-output-panel">
+    <div class="ide-panel-bar">
+      <span class="ide-panel-title">📤 output</span>
+      <button class="btn btn-secondary" onclick="clearOutput()" style="padding:0.35rem 0.75rem; font-size:0.82rem;">Clear</button>
+    </div>
+
+    <pre id="ide-output" class="ide-output">(output will appear here after you run your code)</pre>
+
+    <!-- AI marking bar -->
+    <div class="ai-mark-bar">
+      <button class="btn btn-secondary" id="ai-mark-btn"
+              onclick="quickMark(_editor ? _editor.getValue() : '', '', document.getElementById('ai-mark-btn'), document.getElementById('ai-feedback-output'))"
+              style="font-size:0.82rem; padding:0.4rem 0.9rem;">
+        🤖 Mark My Code
+      </button>
+      <span style="font-size:0.75rem; color:var(--muted); font-family:var(--font-mono);">
+        AI feedback powered by Puter.js · free · no API key
+      </span>
+    </div>
+
+    <div id="ai-feedback-output" style="padding:0 1.25rem 1rem; overflow-y:auto;"></div>
+  </div>
+
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/main.js"></script>
+<script src="js/db.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/ai-mark.js"></script>
+<script src="js/ide.js"></script>
+</body>
+</html>
