@@ -1,5 +1,3 @@
-// ===== PYLEARN — Firebase Config =====
-
 const FIREBASE_CONFIG = {
   apiKey:            "AIzaSyC4BCl8Tf5A33xbuvH1fl_xD41AQ5IRqr4",
   authDomain:        "pylearn-d6356.firebaseapp.com",
