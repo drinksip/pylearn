@@ -7,6 +7,52 @@ let _auth = null;
 let _db   = null;
 let _user = null;
 
+// ─── Show sign-in button immediately (before Firebase loads) ─────────────────
+// This prevents the gap where the nav area looks empty.
+document.addEventListener('DOMContentLoaded', () => {
+  _renderAuthNav(null);
+});
+
+// ─── Login gate — call this on any page that requires auth ───────────────────
+// Shows a full-screen overlay if the user isn't signed in.
+// Automatically removes itself once the user signs in.
+function requireLogin() {
+  // Don't gate index.html
+  const page = location.pathname.split('/').pop();
+  if (!page || page === 'index.html') return;
+
+  // Inject the gate overlay
+  const gate = document.createElement('div');
+  gate.id = 'login-gate';
+  gate.style.cssText = `
+    position:fixed;inset:0;z-index:9999;
+    background:var(--bg);
+    display:flex;align-items:center;justify-content:center;
+    flex-direction:column;text-align:center;padding:2rem;
+  `;
+  gate.innerHTML = `
+    <div style="max-width:400px;width:100%;">
+      <div style="font-family:var(--mono);font-size:1.3rem;font-weight:700;margin-bottom:.5rem;">
+        <span style="color:var(--yellow)">[</span><span style="color:var(--blue)">py</span>learn<span style="color:var(--yellow)">]</span>
+      </div>
+      <p style="color:var(--muted);font-size:.9rem;margin-bottom:2rem;">Sign in to track your progress, earn XP, and sync across devices.</p>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:2rem;">
+        <div style="font-size:2.5rem;margin-bottom:1rem">🔒</div>
+        <h2 style="font-size:1.2rem;font-weight:900;margin-bottom:.4rem">Sign in to continue</h2>
+        <p style="color:var(--muted);font-size:.85rem;margin-bottom:1.5rem">Create a free account or sign in with Google.</p>
+        <button class="btn btn-primary" style="width:100%;margin-bottom:.75rem;justify-content:center;" onclick="openAuthModal()">Sign In / Register</button>
+        <button class="google-btn" onclick="handleGoogleSignIn()" style="width:100%">
+          <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"/><path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.32-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.68 28.18A13.5 13.5 0 0 1 10.82 24c0-1.45.25-2.86.86-4.18v-5.7H4.34A21.98 21.98 0 0 0 2 24c0 3.55.85 6.91 2.34 9.88l7.34-5.7z"/><path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.34 5.7c1.74-5.2 6.59-9.07 12.32-9.07z"/></svg>
+          Continue with Google
+        </button>
+        <p style="margin-top:1rem;font-size:.75rem;color:var(--muted)">
+          Free forever · No credit card · <a href="index.html" style="color:var(--blue)">Back to home</a>
+        </p>
+      </div>
+    </div>`;
+  document.body.appendChild(gate);
+}
+
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
 async function initFirebase() {
   if (!USE_FIREBASE) { _renderAuthNav(null); return; }
@@ -31,12 +77,20 @@ async function initFirebase() {
     _renderAuthNav(user);
 
     if (user) {
+      // Remove the login gate if present
+      document.getElementById('login-gate')?.remove();
+      closeAuthModal();
       await _ensureUserDoc(user);
       await _syncFromCloud(user.uid);
     } else {
       // Signed out — clear in-memory progress so data doesn't leak
       Progress.clear();
       if (typeof updateMapUI === 'function') updateMapUI();
+      // Show gate on protected pages
+      const page = location.pathname.split('/').pop();
+      if (page && page !== 'index.html' && !document.getElementById('login-gate')) {
+        requireLogin();
+      }
     }
   });
 }
