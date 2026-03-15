@@ -1,94 +1,91 @@
 // ===== PYLEARN — AI Marking (Puter.js) =====
-// Uses puter.ai.chat() — completely free, no API key required.
-// Puter.js is loaded in the HTML: <script src="https://js.puter.com/v2/"></script>
 
-// ─── Main mark function ───────────────────────────────────────────────────────
-async function markCode(code, task = '', onResult) {
-  if (!code || !code.trim()) {
-    onResult({ error: true, message: 'No code to mark — write some Python first!' });
-    return;
-  }
+async function quickMark(code, task, btnEl, outputEl) {
+  if (!btnEl || !outputEl) return;
+  if (!code?.trim()) { outputEl.innerHTML = '<div class="ai-error">Write some code first!</div>'; return; }
 
-  const taskSection = task
-    ? `The task/exercise the student was attempting:\n"""\n${task}\n"""\n\n`
-    : '';
+  btnEl.disabled = true;
+  outputEl.innerHTML = `<div class="ai-loading"><span class="ai-spinner"></span> Analysing your code…</div>`;
 
-  const prompt = `You are a friendly, encouraging Python tutor marking a student's code.
+  const taskLine = task ? `\nTask the student was attempting:\n"${task}"\n` : '';
 
-${taskSection}Student's code:
+  const prompt = `You are a friendly Python tutor reviewing a student's code. Be encouraging but honest.
+${taskLine}
+Student's code:
 \`\`\`python
 ${code}
 \`\`\`
 
-Please provide:
-1. **Overall mark**: X/10 with a one-line verdict
-2. **What's good**: 2–3 specific things done well
-3. **Improvements**: 2–3 clear, actionable suggestions (with corrected code snippets where helpful)
-4. **Did you know?**: One Python tip or trick related to what they wrote
+Respond with EXACTLY this structure:
 
-Keep your tone warm, clear, and encouraging. Format using markdown.`;
+**Score:** X/10
+
+**What's working well:**
+- (2-3 specific positives)
+
+**Issues to fix:**
+- (bugs, errors, or "No issues found!")
+
+**Improvements:**
+- (1-2 Pythonic suggestions with short code snippets)
+
+**Did you know?**
+(One Python tip related to what they wrote)
+
+Keep it warm, clear, and beginner-friendly.`;
 
   try {
-    const response = await puter.ai.chat(prompt);
-    const text = typeof response === 'string' ? response
-      : response?.message?.content?.[0]?.text
-      || response?.content?.[0]?.text
-      || response?.text
-      || JSON.stringify(response);
-    onResult({ error: false, text });
-  } catch (e) {
-    onResult({ error: true, message: `AI marking failed: ${e.message}` });
+    if (typeof puter === 'undefined') throw new Error('Puter.js not loaded — check your internet connection.');
+    const response = await puter.ai.chat(prompt, { model: 'meta-llama/llama-3.3-70b-instruct' });
+    const text = response?.message?.content?.[0]?.text || response?.toString() || 'No response.';
+    _renderAI(outputEl, text);
+  } catch(e) {
+    if (e.message?.match(/sign.?in|auth|login|cancel/i)) {
+      outputEl.innerHTML = `
+        <div style="text-align:center;padding:1rem;">
+          <div style="font-size:2rem;margin-bottom:.5rem">🤖</div>
+          <p style="font-weight:700;margin-bottom:.4rem">Sign in to Puter for free AI marking</p>
+          <p style="color:var(--muted);font-size:.83rem;margin-bottom:1rem">Free account · No credit card · One-time setup</p>
+          <button class="btn btn-primary btn-sm" onclick="puter.auth.signIn().then(()=>quickMark('${code.replace(/'/g,"\\'")}','${(task||'').replace(/'/g,"\\'")}',document.querySelector('.ai-mark-btn'),this.closest('.ai-output')))">
+            Sign in with Puter
+          </button>
+        </div>`;
+    } else {
+      outputEl.innerHTML = `<div class="ai-error">⚠️ ${e.message}</div>`;
+    }
+  } finally {
+    btnEl.disabled = false;
+    btnEl.textContent = '🤖 Mark My Code';
   }
 }
 
-// ─── Render AI feedback ────────────────────────────────────────────────────────
-// Pass a container element and the result from markCode.
-function renderAIFeedback(container, result) {
-  if (result.error) {
-    container.innerHTML = `<div class="ai-error">⚠️ ${result.message}</div>`;
-    return;
-  }
+function _renderAI(container, text) {
+  // Extract score
+  const scoreMatch = text.match(/\*\*Score:\*\*\s*(\d+)\/10/);
+  let html = '<div class="ai-result">';
 
-  // Convert markdown-ish text to HTML
-  const html = result.text
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/```python([\s\S]*?)```/g, '<pre class="ai-code"><code>$1</code></pre>')
-    .replace(/```([\s\S]*?)```/g, '<pre class="ai-code"><code>$1</code></pre>')
-    .replace(/^#{1,3} (.+)$/gm, '<h4>$1</h4>')
-    .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
-    .replace(/(<li>[\s\S]+?<\/li>)/g, '<ol>$1</ol>')
-    .replace(/\n\n/g, '</p><p>')
-    .replace(/^(.+)$/gm, (m) => m.startsWith('<') ? m : `<p>${m}</p>`);
-
-  container.innerHTML = `
-    <div class="ai-result">
-      <div class="ai-result-header">
-        <span class="ai-badge">🤖 AI Feedback</span>
-        <span style="font-size:0.78rem;color:var(--muted)">Powered by Puter.js · Free</span>
-      </div>
-      <div class="ai-result-body">${html}</div>
+  if (scoreMatch) {
+    const n = parseInt(scoreMatch[1]);
+    const cls = n >= 8 ? '' : n >= 5 ? 'mid' : 'low';
+    const msg = n >= 8 ? '🎉 Excellent work!' : n >= 5 ? '👍 Good effort!' : '💪 Keep practising!';
+    html += `<div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;padding:.85rem;background:var(--bg3);border-radius:var(--r)">
+      <span class="ai-score ${cls}">${n}/10</span>
+      <span style="color:var(--muted);font-size:.875rem">${msg}</span>
     </div>`;
-
-  // Highlight any code blocks inside AI response
-  if (typeof hljs !== 'undefined') {
-    container.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
   }
-}
 
-// ─── Lesson IDE quick-mark helper ─────────────────────────────────────────────
-// Called from learn.html or ide.html "Mark My Code" button.
-async function quickMark(code, task, buttonEl, outputEl) {
-  if (!buttonEl || !outputEl) return;
+  // Render rest as markdown-ish
+  const body = text
+    .replace(/\*\*Score:\*\*[^\n]*/g, '')
+    .replace(/\*\*(.+?):\*\*/g, '<h4>$1:</h4>')
+    .replace(/^[-•]\s+(.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>[\s\S]+?<\/li>)+/g, m => `<ul>${m}</ul>`)
+    .replace(/`([^`\n]+)`/g, '<code>$1</code>')
+    .replace(/\n\n+/g, '\n')
+    .split('\n').filter(l => l.trim())
+    .map(l => l.startsWith('<') ? l : `<p>${l}</p>`)
+    .join('');
 
-  buttonEl.disabled = true;
-  buttonEl.textContent = '🤖 Marking…';
-  outputEl.innerHTML = '<div class="ai-loading"><span class="ai-spinner"></span> Analysing your code…</div>';
-  outputEl.style.display = 'block';
-
-  await markCode(code, task, result => {
-    renderAIFeedback(outputEl, result);
-    buttonEl.disabled = false;
-    buttonEl.textContent = '🤖 Mark My Code';
-  });
+  html += body + '</div>';
+  container.innerHTML = html;
 }

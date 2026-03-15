@@ -1,155 +1,77 @@
-// ===== PYLEARN — Main JS =====
-
-// ─── Progress tracking (localStorage + optional cloud) ────────────────────────
-const Progress = {
-  get() {
-    try { return JSON.parse(localStorage.getItem('pylearn_progress') || '{}'); }
-    catch { return {}; }
-  },
-  set(data) {
-    localStorage.setItem('pylearn_progress', JSON.stringify(data));
-  },
-  markComplete(lessonId) {
-    const d = this.get();
-    d[lessonId] = true;
-    this.set(d);
-    // Push to cloud if signed in
-    const user = typeof getCurrentUser === 'function' && getCurrentUser();
-    if (user && typeof DB !== 'undefined') DB.saveToCloud(user.uid, d);
-  },
-  isComplete(lessonId) {
-    return !!this.get()[lessonId];
-  },
-  count() {
-    return Object.values(this.get()).filter(Boolean).length;
-  }
-};
+// ===== PYLEARN — Main Utilities =====
 
 // ─── Copy code button ─────────────────────────────────────────────────────────
 function copyCode(btn) {
-  const pre = btn.closest('.code-block').querySelector('pre');
-  const text = pre.innerText;
-  navigator.clipboard.writeText(text).then(() => {
+  const pre  = btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
     btn.textContent = 'copied!';
     btn.style.color = 'var(--green)';
     setTimeout(() => { btn.textContent = 'copy'; btn.style.color = ''; }, 2000);
   });
 }
 
-// ─── Quiz ─────────────────────────────────────────────────────────────────────
-function checkQuiz(btn, correct) {
-  const block = btn.closest('.quiz-block');
-  const opts  = block.querySelectorAll('.quiz-opt');
-  const fb    = block.querySelector('.quiz-feedback');
-  if (!fb) return;
-
-  opts.forEach(o => o.disabled = true);
-
-  if (correct) {
-    btn.classList.add('correct');
-    fb.className   = 'quiz-feedback correct';
-    fb.textContent = '✅ Correct! Well done.';
+// ─── "Try it" button — loads code into the inline IDE editor ─────────────────
+let _inlineEditor = null;  // set by lesson.html
+function tryCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre code, pre');
+  const code = pre.innerText.trim();
+  if (_inlineEditor) {
+    _inlineEditor.setValue(code);
+    _inlineEditor.focus();
+    document.getElementById('inline-ide-wrap')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   } else {
-    btn.classList.add('wrong');
-    fb.className   = 'quiz-feedback wrong';
-    fb.textContent = '❌ Not quite — try reviewing the lesson above.';
-    opts.forEach(o => {
-      if (o !== btn && o.dataset.correct !== undefined) o.classList.add('correct');
-    });
+    // Fallback: open standalone IDE with code pre-loaded
+    sessionStorage.setItem('pylearn_pending_code', code);
+    window.open('ide.html', '_blank');
   }
-  fb.style.display = 'block';
+}
+
+// ─── Highlight.js ─────────────────────────────────────────────────────────────
+function highlightAll() {
+  if (typeof hljs === 'undefined') return;
+  document.querySelectorAll('pre code').forEach(b => {
+    if (!b.dataset.highlighted) hljs.highlightElement(b);
+  });
 }
 
 // ─── Nav active link ─────────────────────────────────────────────────────────
 function setActiveNav() {
-  const path = window.location.pathname.split('/').pop() || 'index.html';
+  const page = location.pathname.split('/').pop() || 'index.html';
   document.querySelectorAll('.nav-links a').forEach(a => {
-    const href = a.getAttribute('href');
-    if (href === path || (path === '' && href === 'index.html')) {
-      a.classList.add('active');
-    }
+    a.classList.toggle('active', a.getAttribute('href') === page);
   });
 }
 
-// ─── Progress bar updater ────────────────────────────────────────────────────
-function updateProgressBars() {
-  const total = typeof LESSONS !== 'undefined' ? LESSONS.length : 30;
-  const done  = Progress.count();
-  document.querySelectorAll('.progress-fill').forEach(el => {
-    const pct = Math.round((done / total) * 100);
-    el.style.width = pct + '%';
-  });
-  document.querySelectorAll('.progress-count').forEach(el => {
-    el.textContent = `${done} / ${total} lessons`;
-  });
-}
-
-// ─── Highlight.js initialiser ────────────────────────────────────────────────
-// Called after lesson HTML is injected into the DOM.
-function highlightLesson() {
-  if (typeof hljs === 'undefined') return;
-  document.querySelectorAll('pre code').forEach(block => {
-    if (!block.dataset.highlighted) {
-      hljs.highlightElement(block);
-    }
-  });
-}
-
-// ─── Smooth fade-ins ─────────────────────────────────────────────────────────
-function initFadeIns() {
-  const els = document.querySelectorAll('.fade-in');
-  if (!('IntersectionObserver' in window)) {
-    els.forEach(el => { el.style.opacity = 1; el.style.transform = 'none'; });
-    return;
-  }
+// ─── Scroll fade-ins ─────────────────────────────────────────────────────────
+function initFadeUps() {
+  if (!('IntersectionObserver' in window)) return;
   const obs = new IntersectionObserver(entries => {
     entries.forEach(e => {
       if (e.isIntersecting) {
-        e.target.style.opacity    = 1;
-        e.target.style.transform  = 'none';
+        e.target.style.opacity   = '1';
+        e.target.style.transform = 'none';
+        obs.unobserve(e.target);
       }
     });
-  }, { threshold: 0.1 });
-  els.forEach(el => {
-    el.style.opacity    = 0;
-    el.style.transform  = 'translateY(20px)';
-    el.style.transition = 'opacity 0.5s, transform 0.5s';
+  }, { threshold: .08 });
+  document.querySelectorAll('.fade-up').forEach(el => {
+    el.style.opacity   = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity .5s ease, transform .5s ease';
     obs.observe(el);
   });
 }
 
-// ─── Utility: escape HTML ────────────────────────────────────────────────────
-function escapeHtml(str) {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
+// ─── URL params helper ────────────────────────────────────────────────────────
+function getParam(key) { return new URLSearchParams(location.search).get(key); }
 
-// ─── Utility: load script once ───────────────────────────────────────────────
-function loadScript(src) {
-  return new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
-    const s    = document.createElement('script');
-    s.src      = src;
-    s.onload   = resolve;
-    s.onerror  = reject;
-    document.head.appendChild(s);
-  });
-}
-
-// ─── Lesson map builder ───────────────────────────────────────────────────────
-// Called once lessons-1.js and lessons-2.js are both loaded.
-function buildLessonMap() {
-  if (typeof LESSONS === 'undefined') return;
-  window.LESSON_MAP = {};
-  LESSONS.forEach((l, i) => { LESSON_MAP[l.id] = i; });
+// ─── Escape HTML ──────────────────────────────────────────────────────────────
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   setActiveNav();
-  buildLessonMap();
-  updateProgressBars();
-  initFadeIns();
+  initFadeUps();
 });

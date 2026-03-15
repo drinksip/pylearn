@@ -1,10 +1,15 @@
+// ===== PYLEARN — Firebase Config =====
+// Fill in YOUR values from Firebase Console → Project Settings → Your apps → Web
+// See README.md for exact step-by-step instructions.
+
 const FIREBASE_CONFIG = {
-  apiKey:            "AIzaSyBpOMk3bcOX4SEcMuCdN5QK0XiZx26l7j8",
-  authDomain:        "pylearn-81cb6.firebaseapp.com",
-  projectId:         "pylearn-81cb6",
-  storageBucket:     "pylearn-81cb6.firebasestorage.app",
-  messagingSenderId: "788524912581",
-  appId:             "1:788524912581:web:cbbac09aa59d8f842645ac"
+  apiKey:            "YOUR_API_KEY",
+  authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId:         "YOUR_PROJECT_ID",
+  storageBucket:     "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId:             "YOUR_APP_ID"
 };
 
+// Set false to disable Firebase and run with localStorage only (no accounts)
 const USE_FIREBASE = true;
