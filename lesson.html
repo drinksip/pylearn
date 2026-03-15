@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Lesson — PyLearn</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.26.0/full/pyodide.js"></script>
+  <script src="https://js.puter.com/v2/"></script>
+  <style>
+    body { overflow: hidden; }
+    @media(max-width:900px) { body { overflow: auto; } }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="map.html" class="nav-logo"><span class="lb">[</span><span class="py">py</span>learn<span class="lb">]</span></a>
+  <ul class="nav-links">
+    <li><a href="map.html">← Map</a></li>
+  </ul>
+  <div class="nav-game">
+    <div class="nav-xp">⚡ <span class="nav-xp-val">0 XP</span></div>
+    <div class="nav-streak">🔥 <span class="nav-streak-val">0</span></div>
+  </div>
+  <div id="nav-auth-area"></div>
+</nav>
+
+<!-- Top progress bar -->
+<div class="lesson-topbar" id="lesson-topbar">
+  <div class="lesson-progress-bar"><div class="lesson-progress-fill" id="lesson-progress" style="width:0%"></div></div>
+  <div class="lesson-xp-badge">⚡ <span id="lesson-xp-label">0</span> XP</div>
+  <button class="lesson-close" onclick="location.href='map.html'" title="Back to map">✕</button>
+</div>
+
+<!-- Lesson body — content injected here -->
+<div class="lesson-body" id="lesson-body"></div>
+
+<!-- ===== COMPLETION SCREEN ===== -->
+<div class="completion-screen" id="completion-screen">
+  <div class="completion-box">
+    <span class="completion-emoji" id="completion-emoji">🎉</span>
+    <h2 id="completion-title">Lesson Complete!</h2>
+    <p id="completion-msg"></p>
+    <div class="completion-xp">
+      <span>⚡</span>
+      <span id="completion-xp">+0 XP</span>
+    </div>
+    <div id="completion-badges" style="margin-bottom:1.5rem;"></div>
+    <div class="completion-actions">
+      <button class="btn btn-secondary" onclick="location.href='map.html'">← Map</button>
+      <button class="btn btn-primary" id="completion-next-btn" onclick="goNext()">Next Lesson →</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/lesson-data.js"></script>
+<script src="js/progress.js"></script>
+<script src="js/firebase.js"></script>
+<script src="js/main.js"></script>
+<script src="js/ide.js"></script>
+<script src="js/ai-mark.js"></script>
+<script>
+
+const lessonId = getParam('id');
+let _lesson    = null;
+let _nextLesson = null;
+let _challengeEditor = null;
+let _practiceScore   = 0;
+let _practiceTotal   = 0;
+let _practiceIdx     = 0;
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  if (!lessonId || !LESSON_MAP[lessonId]) {
+    document.getElementById('lesson-body').innerHTML =
+      '<div style="padding:3rem;text-align:center;"><h2>Lesson not found</h2><a href="map.html" class="btn btn-primary">← Back to Map</a></div>';
+    return;
+  }
+
+  const info = LESSON_MAP[lessonId];
+  _lesson    = info.lesson;
+  _nextLesson = getNextLesson(lessonId);
+
+  document.title = `${_lesson.title} — PyLearn`;
+  document.getElementById('lesson-xp-label').textContent = _lesson.xp;
+
+  if (_lesson.type === 'learn')     renderLearn();
+  else if (_lesson.type === 'practice') renderPractice();
+  else if (_lesson.type === 'challenge') renderChallenge();
+});
+
+// ─── LEARN mode ───────────────────────────────────────────────────────────────
+function renderLearn() {
+  const body = document.getElementById('lesson-body');
+  body.innerHTML = `
+    <div class="learn-content" id="learn-content">
+      ${_lesson.content}
+      <div style="margin-top:2.5rem;padding-top:2rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
+        <a href="map.html" class="btn btn-secondary btn-sm">← Back to Map</a>
+        <button class="btn btn-green" onclick="completeLesson()">
+          ✓ Mark Complete &amp; Continue
+        </button>
+      </div>
+    </div>`;
+
+  // Syntax highlight
+  hljs.configure({ ignoreUnescapedHTML: true });
+  highlightAll();
+
+  // Set up inline IDE for "Try it" buttons
+  // Inject a mini IDE below the content
+  const inlineIDE = document.createElement('div');
+  inlineIDE.id = 'inline-ide-wrap';
+  inlineIDE.style.cssText = `
+    position:sticky; bottom:0; background:var(--bg2);
+    border-top:1px solid var(--border); overflow:hidden;
+    display:flex; flex-direction:column;
+  `;
+  inlineIDE.innerHTML = `
+    <div class="ide-bar">
+      <span class="ide-bar-title" style="font-size:.7rem">🐍 Try it here — click "▶ Try it" on any example above</span>
+      <button class="ide-run-btn" id="learn-run-btn" disabled onclick="runCode(_inlineEditor,'learn-output','learn-run-btn','learn-runtime')">▶ Run</button>
+      <button class="ide-small-btn" onclick="clearOutput('learn-output','learn-runtime')">Clear</button>
+      <button class="ide-small-btn" onclick="changeFontSize(-1)">A−</button>
+      <button class="ide-small-btn" onclick="changeFontSize(1)">A+</button>
+      <span class="ide-bar-title" id="learn-runtime" style="margin-left:auto"></span>
+    </div>
+    <div style="height:200px;position:relative;">
+      <textarea id="learn-editor"># Click "▶ Try it" on a code example above, or write your own Python here!</textarea>
+    </div>
+    <div class="ide-status loading" id="learn-status">⏳ Loading Python…</div>
+    <pre id="learn-output" class="ide-output" style="max-height:120px;border-top:1px solid var(--border);"></pre>
+  `;
+
+  document.querySelector('.lesson-body').appendChild(inlineIDE);
+
+  // Init CodeMirror
+  _inlineEditor = initEditor('learn-editor', { autofocus: false });
+  window._inlineEditor = _inlineEditor;
+
+  // Load Pyodide for the inline IDE
+  loadPyodideRuntime('learn-status', 'learn-run-btn').then(() => {
+    _editor = _inlineEditor; // alias for runCode()
+  });
+
+  setLessonProgress(50);
+}
+
+// ─── PRACTICE mode ────────────────────────────────────────────────────────────
+let _currentQ     = 0;
+let _correctCount = 0;
+
+function renderPractice() {
+  const body = document.getElementById('lesson-body');
+  _currentQ     = 0;
+  _correctCount = 0;
+  body.innerHTML = `<div class="practice-wrap" id="practice-wrap"></div>`;
+  showQuestion(0);
+  setLessonProgress(0);
+}
+
+function showQuestion(idx) {
+  const q = _lesson.questions[idx];
+  if (!q) { finishPractice(); return; }
+
+  const total = _lesson.questions.length;
+  const letters = ['A', 'B', 'C', 'D'];
+  setLessonProgress(Math.round((idx / total) * 80));
+
+  document.getElementById('practice-wrap').innerHTML = `
+    <div class="practice-q-counter">Question ${idx + 1} of ${total}</div>
+    <div class="practice-question">${q.q.replace(/\n/g, '<br>')}</div>
+    <div class="practice-opts">
+      ${q.options.map((opt, i) => `
+        <button class="practice-opt" onclick="answerQ(this, ${i}, ${q.answer}, '${(q.explanation||'').replace(/'/g, "\\'")}', ${idx})">
+          <span class="opt-letter">${letters[i]}</span>${opt}
+        </button>`).join('')}
+    </div>
+    <div class="practice-feedback" id="prac-fb"></div>
+  `;
+}
+
+function answerQ(btn, chosen, correct, explanation, idx) {
+  const opts = document.querySelectorAll('.practice-opt');
+  opts.forEach(o => o.disabled = true);
+
+  const isRight = chosen === correct;
+  if (isRight) _correctCount++;
+
+  btn.classList.add(isRight ? 'correct' : 'wrong');
+  opts[correct].classList.add('correct');
+
+  const fb = document.getElementById('prac-fb');
+  fb.className = 'practice-feedback ' + (isRight ? 'correct' : 'wrong');
+  fb.innerHTML = (isRight ? '✅ ' : '❌ ') + explanation;
+  fb.style.display = 'block';
+
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'btn btn-primary btn-sm';
+  nextBtn.style.cssText = 'margin-top:1rem;';
+  nextBtn.textContent = idx < _lesson.questions.length - 1 ? 'Next Question →' : 'See Results';
+  nextBtn.onclick = () => showQuestion(idx + 1);
+  fb.appendChild(document.createElement('br'));
+  fb.appendChild(nextBtn);
+}
+
+function finishPractice() {
+  const all = _lesson.questions.length;
+  const pct = Math.round((_correctCount / all) * 100);
+  document.getElementById('practice-wrap').innerHTML = `
+    <div style="text-align:center;padding:2rem 0;">
+      <div style="font-size:3.5rem;margin-bottom:1rem">${pct === 100 ? '🏆' : pct >= 60 ? '👍' : '💪'}</div>
+      <h2 style="font-size:1.5rem;font-weight:900;margin-bottom:.5rem">Quiz Complete!</h2>
+      <p style="color:var(--muted);margin-bottom:2rem">${_correctCount} / ${all} correct (${pct}%)</p>
+      <button class="btn btn-green" onclick="completeLesson()">Continue +${_lesson.xp} XP →</button>
+    </div>`;
+  setLessonProgress(100);
+}
+
+// ─── CHALLENGE mode ───────────────────────────────────────────────────────────
+function renderChallenge() {
+  const body = document.getElementById('lesson-body');
+  body.innerHTML = `
+    <div class="challenge-layout">
+      <div class="challenge-task">
+        <h2>🎯 ${_lesson.task || 'Your Challenge'}</h2>
+        <p>${(_lesson.description || '').replace(/\n/g, '<br>')}</p>
+        ${_lesson.example_output ? `
+          <h3 style="font-size:.875rem;font-weight:700;margin-top:1.25rem;margin-bottom:.5rem">Expected Output:</h3>
+          <div class="expected-output">${escapeHtml(_lesson.example_output)}</div>
+        ` : ''}
+        <div style="margin-top:1.5rem;">
+          <button class="btn btn-green btn-sm" onclick="completeLesson()">✓ Mark Complete</button>
+        </div>
+        <!-- AI marking output -->
+        <div class="ai-output" id="challenge-ai-out" style="margin-top:1rem;padding:0;"></div>
+      </div>
+      <div class="challenge-ide">
+        <div class="ide-bar">
+          <span class="ide-bar-title">challenge.py</span>
+          <button class="ide-run-btn" id="chal-run-btn" disabled onclick="runCode(_challengeEditor,'chal-output','chal-run-btn','chal-runtime')">▶ Run</button>
+          <button class="ide-small-btn" onclick="clearOutput('chal-output','chal-runtime')">Clear</button>
+          <button class="ai-mark-btn" onclick="quickMark(_challengeEditor?.getValue(),'${(_lesson.task||'').replace(/'/g,"\\'")  }',this,document.getElementById('challenge-ai-out'))">🤖 Mark My Code</button>
+          <span class="ide-bar-title" id="chal-runtime" style="margin-left:auto"></span>
+        </div>
+        <div style="flex:1;overflow:hidden;position:relative;">
+          <textarea id="chal-editor">${escapeHtml(_lesson.starter || '# Write your solution here\n')}</textarea>
+        </div>
+        <div class="ide-status loading" id="chal-status">⏳ Loading Python…</div>
+        <pre id="chal-output" class="ide-output" style="max-height:200px;border-top:1px solid var(--border);"></pre>
+      </div>
+    </div>`;
+
+  _challengeEditor = initEditor('chal-editor', { autofocus: true });
+  _editor = _challengeEditor;
+
+  loadPyodideRuntime('chal-status', 'chal-run-btn');
+  setLessonProgress(30);
+}
+
+// ─── Complete lesson ──────────────────────────────────────────────────────────
+async function completeLesson() {
+  const result = await Progress.markComplete(lessonId, _lesson.xp);
+
+  setLessonProgress(100);
+
+  // Show completion screen
+  const screen = document.getElementById('completion-screen');
+  document.getElementById('completion-emoji').textContent =
+    _lesson.type === 'challenge' ? '🏆' : _lesson.type === 'practice' ? '✅' : '🎉';
+  document.getElementById('completion-title').textContent = 'Lesson Complete!';
+  document.getElementById('completion-msg').textContent =
+    result.xpGained === 0 ? 'Already completed — no XP awarded.' : `Great work on "${_lesson.title}"!`;
+  document.getElementById('completion-xp').textContent = `+${result.xpGained} XP`;
+
+  // Show new badges
+  const badgesEl = document.getElementById('completion-badges');
+  if (result.newBadges?.length) {
+    badgesEl.innerHTML = result.newBadges.map(id => {
+      const b = ALL_BADGES.find(x => x.id === id);
+      return b ? `<div class="badge earned" style="margin:.2rem auto;display:inline-flex">${b.icon} ${b.name}</div>` : '';
+    }).join('');
+  } else {
+    badgesEl.innerHTML = '';
+  }
+
+  document.getElementById('completion-next-btn').style.display = _nextLesson ? '' : 'none';
+  screen.classList.add('show');
+}
+
+function goNext() {
+  if (_nextLesson) location.href = `lesson.html?id=${_nextLesson.id}`;
+  else location.href = 'map.html';
+}
+
+// ─── Progress bar ─────────────────────────────────────────────────────────────
+function setLessonProgress(pct) {
+  document.getElementById('lesson-progress').style.width = pct + '%';
+}
+</script>
+</body>
+</html>

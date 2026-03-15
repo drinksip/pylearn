@@ -1,214 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PyLearn — Learn Python Step by Step</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>PyLearn — Learn Python from Zero to Pro</title>
+  <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
 
-<!-- ===== NAV ===== -->
 <nav>
-  <a href="index.html" class="nav-logo">
-    <span class="logo-bracket">[</span><span class="logo-py">py</span><span>learn</span><span class="logo-bracket">]</span>
-  </a>
+  <a href="index.html" class="nav-logo"><span class="lb">[</span><span class="py">py</span>learn<span class="lb">]</span></a>
   <ul class="nav-links">
     <li><a href="index.html">Home</a></li>
-    <li><a href="learn.html">Learn</a></li>
+    <li><a href="map.html">Learn</a></li>
     <li><a href="ide.html">IDE</a></li>
-    <li><a href="projects.html">Projects</a></li>
-    <li><a href="learn.html" class="btn-nav">Start Coding →</a></li>
   </ul>
-  <div id="auth-nav"></div>
+  <div id="nav-auth-area"></div>
 </nav>
 
-<!-- ===== HERO ===== -->
 <section class="hero">
   <div class="hero-bg"></div>
   <div class="hero-grid"></div>
   <div class="hero-content">
-    <div class="hero-badge">
-      <span class="dot"></span>
-      Free · No signup required · Open source
-    </div>
-    <h1>Learn <span class="highlight">Python</span><br>from zero to pro</h1>
-    <p>Step-by-step lessons, a real in-browser Python IDE, AI code marking, and hands-on projects — everything you need to master Python, at your own pace.</p>
+    <div class="hero-badge"><span class="dot"></span> Free · Open source · No ads</div>
+    <h1>Learn <span class="hl">Python</span><br>like Duolingo</h1>
+    <p>Step-by-step lessons, a real in-browser Python IDE, AI code marking, XP & streaks — everything you need to become a confident Python developer.</p>
     <div class="hero-actions">
-      <a href="learn.html" class="btn btn-primary">Start Learning →</a>
-      <a href="ide.html" class="btn btn-secondary">Open IDE 🐍</a>
+      <a href="map.html" class="btn btn-primary btn-lg">Start Learning →</a>
+      <a href="ide.html" class="btn btn-secondary btn-lg">Open IDE 🐍</a>
     </div>
 
     <div class="code-preview">
-      <div class="code-preview-bar">
-        <span class="code-dot red"></span>
-        <span class="code-dot yellow"></span>
-        <span class="code-dot green"></span>
-        <span class="code-preview-title">lesson_01.py</span>
+      <div class="cp-bar">
+        <span class="cdot cd-r"></span><span class="cdot cd-y"></span><span class="cdot cd-g"></span>
+        <span class="cp-title">lesson_01.py</span>
       </div>
-      <pre><span class="c-cm"># Your first Python program</span>
-<span class="c-fn">print</span>(<span class="c-str">"Hello, World!"</span>)
+      <pre><span class="cc"># Your first Python program</span>
+<span class="cf">print</span>(<span class="cs">"Hello, World!"</span>)
 
-<span class="c-cm"># Variables store data</span>
-<span class="c-var">name</span> = <span class="c-fn">input</span>(<span class="c-str">"What's your name? "</span>)
-<span class="c-var">age</span>  = <span class="c-fn">int</span>(<span class="c-fn">input</span>(<span class="c-str">"Your age: "</span>))
-
-<span class="c-fn">print</span>(<span class="c-str">f"Hi <span class="c-var">{name}</span>! In 10 years you'll be <span class="c-var">{age + 10}</span>."</span>)</pre>
+<span class="cc"># input() works exactly like the real terminal</span>
+<span class="cv">name</span> = <span class="cf">input</span>(<span class="cs">"What's your name? "</span>)
+<span class="cv">age</span>  = <span class="cf">int</span>(<span class="cf">input</span>(<span class="cs">"Your age: "</span>))
+<span class="cf">print</span>(<span class="cs">f"Hi <span class="cv">{name}</span>! In 10 years you'll be <span class="cv">{age + 10}</span>."</span>)</pre>
     </div>
   </div>
 </section>
 
-<!-- ===== STATS ===== -->
-<div class="stats-strip">
-  <div class="stats-grid">
-    <div><span class="stat-num">30</span><span class="stat-lbl">Lessons</span></div>
-    <div><span class="stat-num">12</span><span class="stat-lbl">Projects</span></div>
-    <div><span class="stat-num">🐍</span><span class="stat-lbl">Real IDE</span></div>
-    <div><span class="stat-num">🤖</span><span class="stat-lbl">AI Marking</span></div>
+<!-- Stats -->
+<div style="background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:2rem;">
+  <div class="hero-stats">
+    <div class="hero-stat"><span class="hero-stat-num">10</span><span class="hero-stat-lbl">Topics</span></div>
+    <div class="hero-stat"><span class="hero-stat-num">40+</span><span class="hero-stat-lbl">Lessons</span></div>
+    <div class="hero-stat"><span class="hero-stat-num">🐍</span><span class="hero-stat-lbl">Real Python IDE</span></div>
+    <div class="hero-stat"><span class="hero-stat-num">🤖</span><span class="hero-stat-lbl">AI Marking</span></div>
+    <div class="hero-stat"><span class="hero-stat-num">⚡</span><span class="hero-stat-lbl">XP & Streaks</span></div>
   </div>
 </div>
 
-<!-- ===== FEATURES ===== -->
+<!-- Features -->
 <section>
   <div class="container">
-    <div class="section-label">FEATURES</div>
+    <div class="section-lbl">FEATURES</div>
     <h2 class="section-title">Everything in one place</h2>
-    <p class="section-desc">No installs, no accounts required — just open the site and start learning.</p>
-
-    <div class="courses-grid" style="margin-top:2.5rem;">
-      <div class="course-card" style="--card-accent:var(--python-blue); cursor:default;">
-        <div class="course-icon">🐍</div>
-        <span class="course-tag">FEATURE</span>
-        <h3>Real Python IDE</h3>
-        <p>Run actual Python 3.11 code in your browser — powered by Pyodide (CPython compiled to WebAssembly). No installs needed.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.25rem;margin-top:2.5rem;">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:1.75rem;" class="fade-up">
+        <div style="font-size:2rem;margin-bottom:.75rem">🗺️</div>
+        <h3 style="font-size:1rem;font-weight:800;margin-bottom:.5rem">Duolingo-style Map</h3>
+        <p style="color:var(--muted);font-size:.875rem">Topics with mini-lessons inside. Learn → Quiz → Challenge. Earn XP and maintain your streak.</p>
       </div>
-      <div class="course-card" style="--card-accent:var(--purple); cursor:default;">
-        <div class="course-icon">🤖</div>
-        <span class="course-tag">FEATURE</span>
-        <h3>AI Code Marking</h3>
-        <p>Get personalised feedback on your code from an AI tutor — scores out of 10, specific tips, and a Python "did you know?" every time.</p>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:1.75rem;" class="fade-up">
+        <div style="font-size:2rem;margin-bottom:.75rem">🐍</div>
+        <h3 style="font-size:1rem;font-weight:800;margin-bottom:.5rem">Real Python IDE</h3>
+        <p style="color:var(--muted);font-size:.875rem">Powered by Pyodide — actual Python 3.11 in your browser. <code>input()</code> works exactly like IDLE.</p>
       </div>
-      <div class="course-card" style="--card-accent:var(--green); cursor:default;">
-        <div class="course-icon">☁️</div>
-        <span class="course-tag">FEATURE</span>
-        <h3>Cloud Progress Sync</h3>
-        <p>Sign in with Google or email to sync your lesson progress across all your devices via Firebase. Works offline too.</p>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:1.75rem;" class="fade-up">
+        <div style="font-size:2rem;margin-bottom:.75rem">🤖</div>
+        <h3 style="font-size:1rem;font-weight:800;margin-bottom:.5rem">AI Code Marking</h3>
+        <p style="color:var(--muted);font-size:.875rem">Score out of 10, specific tips, and a Python tip every time. Free via Puter.js — no API key needed.</p>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:1.75rem;" class="fade-up">
+        <div style="font-size:2rem;margin-bottom:.75rem">⚡</div>
+        <h3 style="font-size:1rem;font-weight:800;margin-bottom:.5rem">XP & Levels</h3>
+        <p style="color:var(--muted);font-size:.875rem">Earn XP for every lesson and quiz. Level up from Beginner to Expert. Track your daily streak.</p>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:1.75rem;" class="fade-up">
+        <div style="font-size:2rem;margin-bottom:.75rem">☁️</div>
+        <h3 style="font-size:1rem;font-weight:800;margin-bottom:.5rem">Cloud Sync</h3>
+        <p style="color:var(--muted);font-size:.875rem">Sign in with Google or email. Progress syncs across all devices via Firebase. Works offline too.</p>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:1.75rem;" class="fade-up">
+        <div style="font-size:2rem;margin-bottom:.75rem">🏅</div>
+        <h3 style="font-size:1rem;font-weight:800;margin-bottom:.5rem">Badges</h3>
+        <p style="color:var(--muted);font-size:.875rem">Earn badges for milestones — First Steps, On Fire (3 streak), Topic Master, Pythonista, and more.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ===== CURRICULUM ===== -->
-<section style="background:var(--bg2); border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
-  <div class="container">
-    <div class="section-label">CURRICULUM</div>
-    <h2 class="section-title">30 lessons across 8 sections</h2>
-    <p class="section-desc">Structured to build on each other — from absolute basics all the way to advanced Python.</p>
-
-    <div class="courses-grid" style="margin-top:2.5rem;">
-      <a href="learn.html" class="course-card" style="--card-accent:var(--python-blue)">
-        <div class="course-icon">🐍</div>
-        <span class="course-tag">SECTION 1</span>
-        <h3>The Basics</h3>
-        <p>Print, variables, data types, strings, numbers, operators, user input.</p>
-        <div class="course-meta"><span>5 lessons</span><span>~72 min</span></div>
-      </a>
-      <a href="learn.html" class="course-card" style="--card-accent:var(--purple)">
-        <div class="course-icon">🔀</div>
-        <span class="course-tag">SECTION 2</span>
-        <h3>Control Flow</h3>
-        <p>If/elif/else, for loops, while loops — make your programs think and repeat.</p>
-        <div class="course-meta"><span>3 lessons</span><span>~48 min</span></div>
-      </a>
-      <a href="learn.html" class="course-card" style="--card-accent:var(--python-yellow)">
-        <div class="course-icon">📋</div>
-        <span class="course-tag">SECTION 3</span>
-        <h3>Collections</h3>
-        <p>List comprehensions, lists, tuples, sets, and dictionaries in depth.</p>
-        <div class="course-meta"><span>4 lessons</span><span>~66 min</span></div>
-      </a>
-      <a href="learn.html" class="course-card" style="--card-accent:var(--green)">
-        <div class="course-icon">⚙️</div>
-        <span class="course-tag">SECTION 4</span>
-        <h3>Functions</h3>
-        <p>Defining functions, *args/**kwargs, lambdas, decorators, scope & closures.</p>
-        <div class="course-meta"><span>3 lessons</span><span>~56 min</span></div>
-      </a>
-      <a href="learn.html" class="course-card" style="--card-accent:var(--orange)">
-        <div class="course-icon">🛡️</div>
-        <span class="course-tag">SECTION 5</span>
-        <h3>Files &amp; Errors</h3>
-        <p>Try/except, custom exceptions, reading/writing files, JSON &amp; CSV.</p>
-        <div class="course-meta"><span>2 lessons</span></div>
-      </a>
-      <a href="learn.html" class="course-card" style="--card-accent:var(--red)">
-        <div class="course-icon">🏗️</div>
-        <span class="course-tag">SECTION 6</span>
-        <h3>Object-Oriented Python</h3>
-        <p>Classes, inheritance, polymorphism, and magic (dunder) methods.</p>
-        <div class="course-meta"><span>3 lessons</span></div>
-      </a>
-    </div>
-  </div>
-</section>
-
-<!-- ===== PROGRESS ===== -->
-<section>
-  <div class="container" style="text-align:center; max-width:600px;">
-    <div class="section-label">YOUR PROGRESS</div>
-    <h2 class="section-title" style="margin-bottom:0.5rem;">Keep going!</h2>
-    <p class="section-desc" style="margin:0 auto 1.5rem;">Progress is saved in your browser, and syncs to the cloud when you sign in.</p>
-    <div class="progress-label"><span class="progress-count">0 / 30 lessons</span></div>
-    <div class="progress-wrap" style="max-width:100%">
-      <div class="progress-fill" style="width:0%"></div>
-    </div>
-    <a href="learn.html" class="btn btn-primary" style="margin-top:1.5rem;">Continue Learning →</a>
-  </div>
-</section>
-
-<!-- ===== PROJECTS PREVIEW ===== -->
-<section style="background:var(--bg2); border-top:1px solid var(--border);">
-  <div class="container">
-    <div class="section-label">PROJECTS</div>
-    <h2 class="section-title">Build real things</h2>
-    <p class="section-desc">12 guided projects from beginner to advanced — apply your knowledge and build something you can show off.</p>
-
-    <div class="courses-grid" style="margin-top:2.5rem;">
-      <div class="course-card" style="--card-accent:var(--green); cursor:default;">
-        <div class="course-icon">🎲</div>
-        <span class="course-tag diff-beginner">BEGINNER</span>
-        <h3>Number Guessing Game</h3>
-        <p>Loops, conditionals, and random numbers — your first complete Python game.</p>
-      </div>
-      <div class="course-card" style="--card-accent:var(--python-yellow); cursor:default;">
-        <div class="course-icon">🔐</div>
-        <span class="course-tag diff-intermediate">INTERMEDIATE</span>
-        <h3>Password Generator</h3>
-        <p>Generate secure passwords with configurable length and character sets.</p>
-      </div>
-      <div class="course-card" style="--card-accent:var(--red); cursor:default;">
-        <div class="course-icon">🐍</div>
-        <span class="course-tag diff-advanced">ADVANCED</span>
-        <h3>Pygame Snake Game</h3>
-        <p>Build the classic Snake game with collision detection and high score tracking.</p>
-      </div>
-    </div>
-    <div style="text-align:center; margin-top:2rem;">
-      <a href="projects.html" class="btn btn-secondary">View All 12 Projects →</a>
-    </div>
-  </div>
-</section>
-
-<!-- ===== FOOTER ===== -->
 <footer>
-  <div class="footer-logo"><span style="color:var(--python-yellow)">[</span><span style="color:var(--python-blue)">py</span>learn<span style="color:var(--python-yellow)">]</span></div>
-  <p style="margin-top:0.5rem;">A free, open-source Python learning site · Hosted on GitHub Pages</p>
-  <p style="margin-top:0.35rem;font-size:0.8rem;">Real IDE · AI Marking · Cloud Sync · No frameworks · No cost</p>
+  <div class="footer-logo"><span style="color:var(--yellow)">[</span><span style="color:var(--blue)">py</span>learn<span style="color:var(--yellow)">]</span></div>
+  <p style="margin-top:.4rem">Free · Open source · Hosted on GitHub Pages</p>
 </footer>
 
 <script src="js/config.js"></script>
+<script src="js/progress.js"></script>
+<script src="js/firebase.js"></script>
 <script src="js/main.js"></script>
-<script src="js/db.js"></script>
-<script src="js/auth.js"></script>
 </body>
 </html>

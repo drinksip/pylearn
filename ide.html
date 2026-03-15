@@ -1,147 +1,123 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Python IDE — PyLearn</title>
-  <link rel="stylesheet" href="css/style.css" />
-
-  <!-- CodeMirror -->
-  <link  rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
-  <link  rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css" />
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
-
-  <!-- Pyodide -->
   <script src="https://cdn.jsdelivr.net/pyodide/v0.26.0/full/pyodide.js"></script>
-
-  <!-- Puter.js for AI marking -->
   <script src="https://js.puter.com/v2/"></script>
-
   <style>
-    /* IDE-specific height fix — override base body scroll */
     body { overflow: hidden; }
-    @media (max-width: 900px) { body { overflow: auto; } }
+    @media(max-width:900px) { body { overflow: auto; } }
   </style>
 </head>
 <body>
 
-<!-- ===== NAV ===== -->
 <nav>
-  <a href="index.html" class="nav-logo">
-    <span class="logo-bracket">[</span><span class="logo-py">py</span><span>learn</span><span class="logo-bracket">]</span>
-  </a>
+  <a href="index.html" class="nav-logo"><span class="lb">[</span><span class="py">py</span>learn<span class="lb">]</span></a>
   <ul class="nav-links">
     <li><a href="index.html">Home</a></li>
-    <li><a href="learn.html">Learn</a></li>
+    <li><a href="map.html">Learn</a></li>
     <li><a href="ide.html">IDE</a></li>
-    <li><a href="projects.html">Projects</a></li>
   </ul>
-  <div id="auth-nav"></div>
+  <div id="nav-auth-area"></div>
 </nav>
 
-<!-- ===== IDE LAYOUT ===== -->
-<div class="ide-page-layout">
+<div class="ide-page">
 
-  <!-- LEFT: Snippet library -->
-  <div class="ide-snippets-panel">
-    <div class="ide-snippets-title">📂 Snippets</div>
-
-    <div style="padding:0 0 0.5rem;">
-      <div style="padding:0.25rem 1rem 0.25rem; font-family:var(--font-mono); font-size:0.65rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em;">Starter</div>
-      <button class="ide-snippet-btn" onclick="loadSnippet('hello')">👋 Hello World</button>
-      <button class="ide-snippet-btn" onclick="loadSnippet('fizzbuzz')">🎮 FizzBuzz</button>
-    </div>
-
-    <div style="padding:0 0 0.5rem;">
-      <div style="padding:0.25rem 1rem 0.25rem; font-family:var(--font-mono); font-size:0.65rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em;">Algorithms</div>
-      <button class="ide-snippet-btn" onclick="loadSnippet('fibonacci')">🔢 Fibonacci</button>
-      <button class="ide-snippet-btn" onclick="loadSnippet('listcomp')">📋 List Comp</button>
-    </div>
-
-    <div style="padding:0 0 0.5rem;">
-      <div style="padding:0.25rem 1rem 0.25rem; font-family:var(--font-mono); font-size:0.65rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em;">Advanced</div>
-      <button class="ide-snippet-btn" onclick="loadSnippet('classes')">🏗️ Classes</button>
-      <button class="ide-snippet-btn" onclick="loadSnippet('decorators')">✨ Decorators</button>
-      <button class="ide-snippet-btn" onclick="loadSnippet('generators')">⚡ Generators</button>
-    </div>
-
-    <div style="padding:0.75rem 1rem 0; border-top:1px solid var(--border); margin-top:0.5rem;">
-      <p style="font-size:0.75rem; color:var(--muted); margin:0;">
+  <!-- Left: Snippets -->
+  <div class="ide-snippets">
+    <div class="ide-snip-head">Starter</div>
+    <button class="ide-snip-btn" onclick="loadSnippet('hello',_editor)">👋 Hello + input()</button>
+    <button class="ide-snip-btn" onclick="loadSnippet('input_demo',_editor)">💬 input() Demo</button>
+    <button class="ide-snip-btn" onclick="loadSnippet('fizzbuzz',_editor)">🎮 FizzBuzz</button>
+    <div class="ide-snip-head">Algorithms</div>
+    <button class="ide-snip-btn" onclick="loadSnippet('fibonacci',_editor)">🔢 Fibonacci</button>
+    <button class="ide-snip-btn" onclick="loadSnippet('listcomp',_editor)">📋 List Comp</button>
+    <div class="ide-snip-head">Advanced</div>
+    <button class="ide-snip-btn" onclick="loadSnippet('classes',_editor)">🏗️ Classes</button>
+    <button class="ide-snip-btn" onclick="loadSnippet('decorators',_editor)">✨ Decorators</button>
+    <button class="ide-snip-btn" onclick="loadSnippet('generators',_editor)">⚡ Generators</button>
+    <div style="margin-top:1rem;padding:.75rem 1rem;border-top:1px solid var(--border);">
+      <p style="font-size:.73rem;color:var(--muted);line-height:1.7">
         <strong style="color:var(--text)">Shortcuts</strong><br>
         <kbd>Ctrl+Enter</kbd> Run<br>
-        <kbd>Tab</kbd> Indent (4 spaces)
+        <kbd>Tab</kbd> Indent
+      </p>
+      <p style="font-size:.73rem;color:var(--muted);margin-top:.5rem;">
+        💡 <strong style="color:var(--text)">input()</strong> works like the real Python terminal — a dialog box appears when your code calls it.
       </p>
     </div>
   </div>
 
-  <!-- CENTRE: Editor -->
-  <div class="ide-editor-panel">
-    <div class="ide-panel-bar">
-      <span class="ide-panel-title">📝 editor.py</span>
-      <button class="btn btn-primary" id="ide-run-btn" onclick="runCode()" style="padding:0.35rem 1rem; font-size:0.82rem;">▶ Run</button>
-      <button class="btn btn-secondary" onclick="clearOutput()" style="padding:0.35rem 0.75rem; font-size:0.82rem;">🗑 Clear</button>
-      <button class="btn btn-secondary" onclick="downloadCode()" style="padding:0.35rem 0.75rem; font-size:0.82rem;">⬇ Save</button>
-      <button class="btn btn-secondary" onclick="changeFontSize(-1)" style="padding:0.35rem 0.6rem; font-size:0.82rem;">A−</button>
-      <button class="btn btn-secondary" onclick="changeFontSize(1)"  style="padding:0.35rem 0.6rem; font-size:0.82rem;">A+</button>
+  <!-- Centre: Editor -->
+  <div class="ide-editor-pane">
+    <div class="ide-bar">
+      <span class="ide-bar-title">editor.py</span>
+      <button class="ide-run-btn" id="ide-run-btn" disabled onclick="runCode(_editor)">▶ Run</button>
+      <button class="ide-small-btn" onclick="clearOutput()">🗑 Clear</button>
+      <button class="ide-small-btn" onclick="downloadCode(_editor)">⬇ Save</button>
+      <button class="ide-small-btn" onclick="changeFontSize(-1)">A−</button>
+      <button class="ide-small-btn" onclick="changeFontSize(1)">A+</button>
     </div>
-
     <div class="ide-editor-wrap">
       <textarea id="ide-editor"># Welcome to the PyLearn IDE! 🐍
-# Real Python 3.11 running in your browser via Pyodide.
-# Press Ctrl+Enter (or click Run) to execute.
+# Python 3.11 runs directly in your browser via Pyodide.
+# Ctrl+Enter to run.
+#
+# 💡 input() works exactly like IDLE/terminal:
+#    A dialog box appears when your code calls it!
 
-print("Hello, World!")
+name = input("What's your name? ")
+print(f"Hello, {name}!")
 
-# Try a list comprehension
-squares = [n ** 2 for n in range(1, 11)]
+# Try some Python:
+squares = [n**2 for n in range(1, 11)]
 print("Squares:", squares)
-
-# f-strings
-name = "Python"
-print(f"Welcome to {name} programming!")
 </textarea>
     </div>
-
-    <div class="ide-status-bar">
-      <span id="ide-status" class="ide-status loading">⏳ Loading Python runtime…</span>
-      <span id="ide-runtime"></span>
-    </div>
+    <div class="ide-status loading" id="ide-status">⏳ Loading Python 3.11 — this takes ~10 seconds the first time…</div>
   </div>
 
-  <!-- RIGHT: Output + AI marking -->
-  <div class="ide-output-panel">
-    <div class="ide-panel-bar">
-      <span class="ide-panel-title">📤 output</span>
-      <button class="btn btn-secondary" onclick="clearOutput()" style="padding:0.35rem 0.75rem; font-size:0.82rem;">Clear</button>
+  <!-- Right: Output + AI -->
+  <div class="ide-output-pane">
+    <div class="ide-bar">
+      <span class="ide-bar-title">output</span>
+      <span class="ide-bar-title" id="ide-runtime" style="margin-left:auto;color:var(--muted)"></span>
     </div>
-
-    <pre id="ide-output" class="ide-output">(output will appear here after you run your code)</pre>
-
-    <!-- AI marking bar -->
-    <div class="ai-mark-bar">
-      <button class="btn btn-secondary" id="ai-mark-btn"
-              onclick="quickMark(_editor ? _editor.getValue() : '', '', document.getElementById('ai-mark-btn'), document.getElementById('ai-feedback-output'))"
-              style="font-size:0.82rem; padding:0.4rem 0.9rem;">
-        🤖 Mark My Code
-      </button>
-      <span style="font-size:0.75rem; color:var(--muted); font-family:var(--font-mono);">
-        AI feedback powered by Puter.js · free · no API key
-      </span>
+    <pre id="ide-output" class="ide-output">(run your code to see output here)</pre>
+    <div class="ai-bar">
+      <button class="ai-mark-btn" onclick="quickMark(_editor?.getValue(),'',this,document.getElementById('ai-output'))">🤖 Mark My Code</button>
+      <span style="font-size:.72rem;color:var(--muted);font-family:var(--mono)">free · no API key · via Puter.js</span>
     </div>
-
-    <div id="ai-feedback-output" style="padding:0 1.25rem 1rem; overflow-y:auto;"></div>
+    <div class="ai-output" id="ai-output"></div>
   </div>
 
 </div>
 
 <script src="js/config.js"></script>
+<script src="js/progress.js"></script>
+<script src="js/firebase.js"></script>
 <script src="js/main.js"></script>
-<script src="js/db.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/ai-mark.js"></script>
 <script src="js/ide.js"></script>
+<script src="js/ai-mark.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  _editor = initEditor('ide-editor');
+
+  // Load any pending code from lesson "Open in IDE" button
+  const pending = sessionStorage.getItem('pylearn_pending_code');
+  if (pending) { _editor.setValue(pending); sessionStorage.removeItem('pylearn_pending_code'); }
+
+  await loadPyodideRuntime('ide-status', 'ide-run-btn');
+});
+</script>
 </body>
 </html>

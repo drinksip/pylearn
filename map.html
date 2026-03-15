@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Learn — PyLearn</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo"><span class="lb">[</span><span class="py">py</span>learn<span class="lb">]</span></a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="map.html">Learn</a></li>
+    <li><a href="ide.html">IDE</a></li>
+  </ul>
+  <div class="nav-game">
+    <div class="nav-xp">⚡ <span class="nav-xp-val">0 XP</span></div>
+    <div class="nav-streak">🔥 <span class="nav-streak-val">0</span></div>
+    <div class="nav-level">🐣 Beginner</div>
+  </div>
+  <div id="nav-auth-area"></div>
+</nav>
+
+<!-- XP progress bar -->
+<div class="map-header">
+  <div class="map-xp-bar-wrap">
+    <span class="map-xp-info">0 XP · Beginner</span>
+    <div class="xp-bar"><div class="xp-fill" style="width:0%"></div></div>
+    <span class="map-level-badge">🐣 Beginner</span>
+  </div>
+</div>
+
+<!-- The map -->
+<div style="overflow-y:auto;">
+  <div class="map-container" id="map-container">
+    <!-- Populated by JS -->
+  </div>
+</div>
+
+<!-- Badges panel (bottom of page) -->
+<div style="max-width:480px;margin:0 auto;padding:0 1.5rem 3rem;">
+  <h3 style="font-size:.875rem;font-weight:800;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.75rem;">🏅 Badges</h3>
+  <div class="badges-grid" id="badges-grid"></div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/lesson-data.js"></script>
+<script src="js/progress.js"></script>
+<script src="js/firebase.js"></script>
+<script src="js/main.js"></script>
+<script>
+
+// ─── Determine if a topic is unlocked ─────────────────────────────────────────
+function isTopicUnlocked(topicIdx) {
+  if (topicIdx === 0) return true;
+  // Unlock next topic when previous topic has at least one completed lesson
+  const prevTopic = TOPICS[topicIdx - 1];
+  return prevTopic.lessons.some(l => Progress.isComplete(l.id));
+}
+
+// ─── Render the full map ──────────────────────────────────────────────────────
+function renderMap() {
+  const container = document.getElementById('map-container');
+  if (!container) return;
+
+  let html = '';
+
+  TOPICS.forEach((topic, ti) => {
+    const unlocked  = isTopicUnlocked(ti);
+    const complete  = Progress.isTopicComplete(topic.id);
+    const started   = Progress.isTopicStarted(topic.id);
+    const doneCount = topic.lessons.filter(l => Progress.isComplete(l.id)).length;
+
+    const stateClass = !unlocked ? 'locked' : complete ? 'complete' : '';
+
+    // Find first incomplete lesson
+    const firstIncomplete = topic.lessons.find(l => !Progress.isComplete(l.id));
+    const resumeId = firstIncomplete?.id || topic.lessons[0].id;
+
+    html += `
+      <div class="map-topic" id="topic-${topic.id}">
+        <div class="topic-node ${stateClass}" onclick="${unlocked ? `toggleTopic('${topic.id}')` : 'showLockedMsg(this)'}">
+          <div class="topic-icon-wrap" style="background:${topic.bg};">
+            <span style="font-size:1.75rem">${topic.icon}</span>
+          </div>
+          <div class="topic-info">
+            <div class="topic-title">${topic.title}</div>
+            <div class="topic-desc">${topic.description}</div>
+            <div class="topic-progress">${doneCount}/${topic.lessons.length} lessons complete</div>
+          </div>
+          ${unlocked
+            ? `<span class="topic-chevron" id="chev-${topic.id}">▼</span>`
+            : `<span class="topic-lock">🔒</span>`
+          }
+        </div>
+
+        <div class="topic-lessons" id="lessons-${topic.id}">
+          ${topic.lessons.map(lesson => {
+            const done    = Progress.isComplete(lesson.id);
+            const isCurrent = lesson.id === resumeId && !complete && unlocked;
+            const locked  = !unlocked;
+            const typeIcons = { learn: '📖', practice: '✏️', challenge: '💻' };
+            const typeLabels = { learn: 'Learn', practice: 'Practice', challenge: 'Challenge' };
+            const cls = locked ? 'locked' : done ? 'done' : isCurrent ? 'current' : '';
+
+            return `<a class="lesson-btn ${cls}"
+                       href="${locked ? '#' : `lesson.html?id=${lesson.id}`}"
+                       ${locked ? 'onclick="return false"' : ''}>
+              <div class="lb-icon ${lesson.type}">${typeIcons[lesson.type]}</div>
+              <div class="lb-info">
+                <div class="lb-title">${lesson.title}</div>
+                <div class="lb-type">${typeLabels[lesson.type]}</div>
+              </div>
+              <span class="lb-xp">+${lesson.xp} XP</span>
+              ${done   ? '<span class="lb-check">✓</span>' : ''}
+              ${locked ? '<span class="lb-lock">🔒</span>' : ''}
+            </a>`;
+          }).join('')}
+
+          ${unlocked && !complete ? `
+            <a href="lesson.html?id=${resumeId}" class="btn btn-green" style="width:100%;justify-content:center;margin-top:.5rem;border-radius:var(--r);">
+              ${started ? '▶ Continue' : '▶ Start'} ${topic.title}
+            </a>` : ''}
+          ${complete ? `
+            <div style="text-align:center;padding:.75rem;color:var(--green);font-weight:700;font-size:.875rem;">
+              ✅ Topic Complete!
+            </div>` : ''}
+        </div>
+      </div>`;
+
+    // Connector line between topics
+    if (ti < TOPICS.length - 1) {
+      html += `<div class="map-connector ${complete ? 'done' : ''}"></div>`;
+    }
+  });
+
+  container.innerHTML = html;
+
+  // Re-open any previously active topics
+  const active = sessionStorage.getItem('pylearn_open_topic');
+  if (active) {
+    const el = document.getElementById(`lessons-${active}`);
+    if (el) { el.classList.add('open'); document.getElementById(`topic-${active}`)?.querySelector('.topic-node')?.classList.add('active'); }
+  } else {
+    // Auto-open first incomplete topic
+    const firstIncomplete = TOPICS.find((t, i) => isTopicUnlocked(i) && !Progress.isTopicComplete(t.id));
+    if (firstIncomplete) openTopic(firstIncomplete.id);
+  }
+
+  renderBadges();
+  Progress._updateAllUI();
+}
+
+function toggleTopic(id) {
+  const el   = document.getElementById(`lessons-${id}`);
+  const node = document.getElementById(`topic-${id}`)?.querySelector('.topic-node');
+  const chev = document.getElementById(`chev-${id}`);
+  const isOpen = el?.classList.contains('open');
+
+  // Close all
+  document.querySelectorAll('.topic-lessons').forEach(e => e.classList.remove('open'));
+  document.querySelectorAll('.topic-node').forEach(n => n.classList.remove('active'));
+
+  if (!isOpen) {
+    el?.classList.add('open');
+    node?.classList.add('active');
+    sessionStorage.setItem('pylearn_open_topic', id);
+    el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } else {
+    sessionStorage.removeItem('pylearn_open_topic');
+  }
+}
+
+function openTopic(id) {
+  const el   = document.getElementById(`lessons-${id}`);
+  const node = document.getElementById(`topic-${id}`)?.querySelector('.topic-node');
+  el?.classList.add('open');
+  node?.classList.add('active');
+}
+
+function showLockedMsg(el) {
+  showToast('🔒 Complete the previous topic to unlock this one!');
+}
+
+// ─── Badges ───────────────────────────────────────────────────────────────────
+function renderBadges() {
+  const container = document.getElementById('badges-grid');
+  if (!container) return;
+  const earned = Progress.getBadges();
+  container.innerHTML = ALL_BADGES.map(b => `
+    <div class="badge ${earned.includes(b.id) ? 'earned' : ''}">
+      <span class="badge-icon">${b.icon}</span>
+      ${b.name}
+    </div>`).join('');
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+renderMap();
+
+// Re-render when Firebase syncs progress
+const _origLoadFromCloud = Progress.loadFromCloud.bind(Progress);
+Progress.loadFromCloud = function(data) {
+  _origLoadFromCloud(data);
+  renderMap();
+};
+</script>
+</body>
+</html>
