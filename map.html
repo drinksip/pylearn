@@ -20,7 +20,9 @@
     <div class="nav-streak">🔥 <span class="nav-streak-val">0</span></div>
     <div class="nav-level">🐣 Beginner</div>
   </div>
-  <div id="nav-auth-area"></div>
+  <div id="nav-auth-area">
+    <button id="nav-auth-btn" onclick="openAuthModal()">Sign In</button>
+  </div>
 </nav>
 
 <!-- XP progress bar -->
@@ -138,16 +140,16 @@ function renderMap() {
 
   container.innerHTML = html;
 
-  // Re-open any previously active topics
+  // Re-open any previously active topics (from sessionStorage)
   const active = sessionStorage.getItem('pylearn_open_topic');
   if (active) {
     const el = document.getElementById(`lessons-${active}`);
-    if (el) { el.classList.add('open'); document.getElementById(`topic-${active}`)?.querySelector('.topic-node')?.classList.add('active'); }
-  } else {
-    // Auto-open first incomplete topic
-    const firstIncomplete = TOPICS.find((t, i) => isTopicUnlocked(i) && !Progress.isTopicComplete(t.id));
-    if (firstIncomplete) openTopic(firstIncomplete.id);
+    if (el) {
+      el.classList.add('open');
+      document.getElementById(`topic-${active}`)?.querySelector('.topic-node')?.classList.add('active');
+    }
   }
+  // NOTE: we do NOT auto-open any topic — the user should click to expand
 
   renderBadges();
   Progress._updateAllUI();

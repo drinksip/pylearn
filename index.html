@@ -15,7 +15,10 @@
     <li><a href="map.html">Learn</a></li>
     <li><a href="ide.html">IDE</a></li>
   </ul>
-  <div id="nav-auth-area"></div>
+  <div id="nav-auth-area">
+    <!-- Shown immediately — replaced by avatar once logged in -->
+    <button id="nav-auth-btn" onclick="openAuthModal()">Sign In</button>
+  </div>
 </nav>
 
 <section class="hero">
@@ -26,7 +29,8 @@
     <h1>Learn <span class="hl">Python</span><br>like Duolingo</h1>
     <p>Step-by-step lessons, a real in-browser Python IDE, AI code marking, XP & streaks — everything you need to become a confident Python developer.</p>
     <div class="hero-actions">
-      <a href="map.html" class="btn btn-primary btn-lg">Start Learning →</a>
+      <a href="map.html" class="btn btn-primary btn-lg" id="hero-start-btn">Start Learning →</a>
+      <button class="btn btn-secondary btn-lg" onclick="openAuthModal()" id="hero-signin-btn" style="display:none">Sign In to Continue →</button>
       <a href="ide.html" class="btn btn-secondary btn-lg">Open IDE 🐍</a>
     </div>
 
@@ -106,5 +110,35 @@
 <script src="js/progress.js"></script>
 <script src="js/firebase.js"></script>
 <script src="js/main.js"></script>
+<script>
+  // After Firebase resolves auth state, update the hero CTA
+  // If user is not logged in, show "Sign In" as the primary button
+  // If user IS logged in, keep "Start Learning →" and redirect if needed
+  document.addEventListener('DOMContentLoaded', () => {
+    // Small delay to let Firebase settle — if still no user, swap the buttons
+    setTimeout(() => {
+      if (!getCurrentUser()) {
+        const startBtn = document.getElementById('hero-start-btn');
+        const signInBtn = document.getElementById('hero-signin-btn');
+        if (startBtn)  startBtn.style.display = 'none';
+        if (signInBtn) { signInBtn.style.display = ''; signInBtn.style.background = 'var(--blue)'; signInBtn.style.color = '#000'; }
+      }
+    }, 2000); // wait 2s for Firebase to resolve
+
+    // After login on this page, redirect to map
+    const origOnAuthChanged = window._onAuthChangedCallback;
+    window._onAuthChangedCallback = (user) => {
+      if (user) {
+        const startBtn = document.getElementById('hero-start-btn');
+        const signInBtn = document.getElementById('hero-signin-btn');
+        if (startBtn)  startBtn.style.display = '';
+        if (signInBtn) signInBtn.style.display = 'none';
+        // If they came from a redirect, send them back
+        const redirect = new URLSearchParams(location.search).get('r');
+        if (redirect) location.href = decodeURIComponent(redirect);
+      }
+    };
+  });
+</script>
 </body>
 </html>
