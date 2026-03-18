@@ -15,18 +15,216 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
   <script src="https://cdn.jsdelivr.net/pyodide/v0.26.0/full/pyodide.js"></script>
   <script src="https://js.puter.com/v2/"></script>
+
   <style>
-    body { overflow: hidden; }
-    @media(max-width:900px) { body { overflow: auto; } }
+    html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
+
+    .lesson-shell {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 58px);
+    }
+
+    /* Top bar */
+    .lesson-topbar {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: .55rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-shrink: 0;
+    }
+    .lesson-progress-bar  { flex: 1; background: var(--bg3); border-radius: 6px; height: 8px; overflow: hidden; }
+    .lesson-progress-fill { height: 100%; background: var(--green); border-radius: 6px; transition: width .4s ease; }
+    .step-label-el        { font-family: var(--mono); font-size: .73rem; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+    .xp-badge-el          { font-family: var(--mono); font-size: .78rem; color: var(--xp); font-weight: 700; flex-shrink: 0; }
+    .lesson-close-btn     { background: transparent; border: 1px solid var(--border); color: var(--muted); width: 30px; height: 30px; border-radius: var(--r); cursor: pointer; font-size: .9rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .2s; }
+    .lesson-close-btn:hover { color: var(--text); border-color: var(--muted); }
+
+    /* Two columns */
+    .lesson-cols {
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* Left: lesson content — scrollable */
+    .lesson-left {
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 2rem 2.5rem 5rem;
+      background: var(--bg);
+    }
+
+    /* Step layout */
+    .step-card  { max-width: 660px; margin: 0 auto; }
+    .step-intro { font-size: .72rem; font-family: var(--mono); color: var(--blue); letter-spacing: .1em; text-transform: uppercase; margin-bottom: .5rem; }
+
+    .step-card h1 { font-size: 1.75rem; font-weight: 900; letter-spacing: -.02em; margin-bottom: .4rem; }
+    .step-meta    { font-family: var(--mono); font-size: .75rem; color: var(--muted); margin-bottom: 2rem; display: flex; gap: 1rem; flex-wrap: wrap; }
+
+    .step-chunk { margin-bottom: .5rem; animation: stepIn .3s ease; }
+    @keyframes stepIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
+
+    .step-chunk h2 { font-size: 1.1rem; font-weight: 800; margin: 0 0 .6rem; display: flex; align-items: center; gap: .55rem; padding-top: 1.75rem; border-top: 1px solid var(--border); }
+    .step-chunk:first-child h2 { border-top: none; padding-top: 0; }
+    .step-chunk p  { color: var(--muted); font-size: .93rem; line-height: 1.8; margin-bottom: 1rem; }
+    .step-chunk ul,
+    .step-chunk ol { color: var(--muted); font-size: .93rem; line-height: 2; margin: 0 0 1rem 1.5rem; }
+    .step-chunk strong { color: var(--text); }
+
+    .step-num {
+      width: 24px; height: 24px;
+      background: var(--blue); color: #000;
+      border-radius: 50%;
+      font-family: var(--mono); font-size: .66rem; font-weight: 700;
+      display: inline-flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .step-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      gap: .75rem;
+      flex-wrap: wrap;
+    }
+
+    /* Mini challenge box */
+    .mini-challenge {
+      background: linear-gradient(135deg, rgba(79,156,249,.07), rgba(255,212,59,.04));
+      border: 1px solid rgba(79,156,249,.25);
+      border-radius: var(--rl);
+      padding: 1.5rem;
+      margin-top: 2rem;
+      animation: stepIn .3s ease;
+    }
+    .mini-challenge h3 { font-size: .95rem; font-weight: 800; color: var(--blue); margin-bottom: .65rem; }
+    .mini-challenge p  { color: var(--text); font-size: .875rem; line-height: 1.75; margin-bottom: .5rem; }
+    .mini-challenge ul { color: var(--text); font-size: .875rem; line-height: 1.9; margin: .5rem 0 .5rem 1.25rem; }
+    .try-in-ide-btn {
+      background: var(--bg3); border: 1px solid var(--blue); color: var(--blue);
+      padding: .4rem .9rem; border-radius: var(--r);
+      font-family: var(--ui); font-size: .82rem; font-weight: 700;
+      cursor: pointer; transition: all .2s; margin-top: .75rem;
+      display: inline-flex; align-items: center; gap: .4rem;
+    }
+    .try-in-ide-btn:hover { background: rgba(79,156,249,.12); }
+
+    /* Practice */
+    .practice-pane { max-width: 620px; margin: 0 auto; }
+
+    /* Challenge left pane */
+    .challenge-left { overflow-y: auto; padding: 1.5rem; background: var(--bg2); }
+    .challenge-left h2 { font-size: 1rem; font-weight: 800; margin-bottom: .65rem; }
+    .challenge-left p  { color: var(--muted); font-size: .875rem; line-height: 1.75; margin-bottom: .75rem; }
+    .challenge-left ul { color: var(--muted); font-size: .875rem; line-height: 1.9; margin: 0 0 .75rem 1.25rem; }
+    .expected-output {
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: var(--r); padding: .75rem 1rem;
+      font-family: var(--mono); font-size: .8rem; color: var(--green);
+      margin-top: .25rem; white-space: pre-wrap;
+    }
+    .expected-output::before { content: '# Expected output'; display: block; color: var(--muted); font-size: .67rem; margin-bottom: .3rem; }
+
+    /* Right: IDE pane */
+    .lesson-right {
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid var(--border);
+      overflow: hidden;
+      background: var(--bg);
+    }
+    .ide-top-bar {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: .5rem .85rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+    .ide-top-title { font-family: var(--mono); font-size: .72rem; color: var(--muted); margin-right: auto; }
+    .ide-editor-wrap { flex: 1; overflow: hidden; position: relative; min-height: 0; }
+    .ide-out {
+      height: 170px;
+      border-top: 1px solid var(--border);
+      overflow-y: auto;
+      font-family: var(--mono);
+      font-size: .82rem;
+      line-height: 1.65;
+      padding: .7rem 1rem;
+      white-space: pre-wrap;
+      color: var(--text);
+      flex-shrink: 0;
+      background: var(--bg);
+    }
+    .ide-out.has-error { color: var(--red); }
+    .ide-out.success   { color: #b9f0c8; }
+    .ide-stat {
+      background: var(--bg3);
+      border-top: 1px solid var(--border);
+      padding: .28rem .85rem;
+      font-family: var(--mono);
+      font-size: .68rem;
+      color: var(--muted);
+      flex-shrink: 0;
+      display: flex;
+      justify-content: space-between;
+    }
+    /* State classes applied by _setStatus */
+    .ide-stat.ready  { color: var(--green); }
+    .ide-stat.loading{ color: var(--yellow); }
+    .ide-stat.error  { color: var(--red); }
+
+    /* AI bar */
+    .ai-bar-row {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      padding: .5rem .85rem;
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      flex-shrink: 0;
+    }
+    .ai-feed { max-height: 160px; overflow-y: auto; padding: .5rem .85rem .75rem; font-size: .84rem; flex-shrink: 0; }
+
+    /* CodeMirror must fill its container */
+    .CodeMirror { height: 100% !important; font-family: var(--mono) !important; font-size: 13px !important; line-height: 1.65 !important; }
+
+    /* Completion overlay */
+    .completion-screen { display: none; position: fixed; inset: 0; z-index: 600; background: rgba(0,0,0,.82); backdrop-filter: blur(6px); align-items: center; justify-content: center; text-align: center; padding: 2rem; }
+    .completion-screen.show { display: flex; }
+    .completion-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 20px; padding: 2.75rem 2.5rem; max-width: 400px; width: 100%; animation: popIn .4s cubic-bezier(.34,1.56,.64,1); }
+    @keyframes popIn { from{opacity:0;transform:scale(.85)} to{opacity:1;transform:scale(1)} }
+    .comp-emoji { font-size: 3.5rem; display: block; margin-bottom: 1rem; }
+    .completion-box h2 { font-size: 1.5rem; font-weight: 900; margin-bottom: .4rem; }
+    .completion-box p  { color: var(--muted); margin-bottom: 1.4rem; }
+    .comp-xp { font-family: var(--mono); font-size: 1.85rem; font-weight: 700; color: var(--xp); display: flex; align-items: center; justify-content: center; gap: .4rem; margin-bottom: 1.4rem; }
+    .comp-actions { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; }
+
+    /* Responsive */
+    @media(max-width: 900px) {
+      html, body { overflow: auto; height: auto; }
+      .lesson-shell { height: auto; }
+      .lesson-cols { grid-template-columns: 1fr; height: auto; overflow: visible; }
+      .lesson-left { overflow: visible; padding: 1.25rem 1rem 3rem; }
+      .lesson-right { height: 440px; border-left: none; border-top: 1px solid var(--border); }
+    }
   </style>
 </head>
 <body>
 
 <nav>
   <a href="map.html" class="nav-logo"><span class="lb">[</span><span class="py">py</span>learn<span class="lb">]</span></a>
-  <ul class="nav-links">
-    <li><a href="map.html">← Map</a></li>
-  </ul>
+  <ul class="nav-links"><li><a href="map.html">← Map</a></li></ul>
   <div class="nav-game">
     <div class="nav-xp">⚡ <span class="nav-xp-val">0 XP</span></div>
     <div class="nav-streak">🔥 <span class="nav-streak-val">0</span></div>
@@ -36,34 +234,68 @@
   </div>
 </nav>
 
-<!-- Top progress bar -->
-<div class="lesson-topbar" id="lesson-topbar">
-  <div class="lesson-progress-bar"><div class="lesson-progress-fill" id="lesson-progress" style="width:0%"></div></div>
-  <div class="lesson-xp-badge">⚡ <span id="lesson-xp-label">0</span> XP</div>
-  <button class="lesson-close" onclick="location.href='map.html'" title="Back to map">✕</button>
+<div class="lesson-shell">
+
+  <!-- Progress / top bar -->
+  <div class="lesson-topbar">
+    <div class="lesson-progress-bar">
+      <div class="lesson-progress-fill" id="l-progress" style="width:0%"></div>
+    </div>
+    <span class="step-label-el" id="l-step-label"></span>
+    <div class="xp-badge-el">⚡ <span id="l-xp-label">0</span> XP</div>
+    <button class="lesson-close-btn" onclick="location.href='map.html'">✕</button>
+  </div>
+
+  <!-- Main columns -->
+  <div class="lesson-cols" id="lesson-cols">
+
+    <!-- LEFT: lesson content -->
+    <div class="lesson-left" id="lesson-left"></div>
+
+    <!-- RIGHT: always-visible IDE -->
+    <div class="lesson-right" id="lesson-right">
+      <div class="ide-top-bar">
+        <span class="ide-top-title" id="ide-pane-title">🐍 Python IDE</span>
+        <button class="ide-run-btn" id="l-run-btn" disabled onclick="runLesson()">▶ Run</button>
+        <button class="ide-small-btn" onclick="clearLessonOutput()">Clear</button>
+        <button class="ide-small-btn" onclick="changeFontSize(-1)">A−</button>
+        <button class="ide-small-btn" onclick="changeFontSize(1)">A+</button>
+        <span id="l-runtime" style="font-family:var(--mono);font-size:.68rem;color:var(--muted);margin-left:auto"></span>
+      </div>
+      <div class="ide-editor-wrap">
+        <textarea id="l-editor"># Python is loading — just a moment!
+# After loading, click ▶ Try it on any example
+# or write your own code here.</textarea>
+      </div>
+      <div class="ide-stat loading" id="l-status">⏳ Loading Python 3.11…</div>
+      <pre class="ide-out" id="l-output">(output appears here)</pre>
+      <div class="ai-bar-row">
+        <button class="ai-mark-btn" id="l-ai-btn"
+                onclick="runAIMark()">🤖 Mark My Code</button>
+        <span style="font-size:.68rem;color:var(--muted);font-family:var(--mono)">free · via Puter.js</span>
+      </div>
+      <div class="ai-feed" id="l-ai-out"></div>
+    </div>
+
+  </div>
 </div>
 
-<!-- Lesson body — content injected here -->
-<div class="lesson-body" id="lesson-body"></div>
-
-<!-- ===== COMPLETION SCREEN ===== -->
+<!-- Completion overlay -->
 <div class="completion-screen" id="completion-screen">
   <div class="completion-box">
-    <span class="completion-emoji" id="completion-emoji">🎉</span>
-    <h2 id="completion-title">Lesson Complete!</h2>
-    <p id="completion-msg"></p>
-    <div class="completion-xp">
-      <span>⚡</span>
-      <span id="completion-xp">+0 XP</span>
-    </div>
-    <div id="completion-badges" style="margin-bottom:1.5rem;"></div>
-    <div class="completion-actions">
+    <span class="comp-emoji" id="comp-emoji">🎉</span>
+    <h2 id="comp-title">Lesson Complete!</h2>
+    <p id="comp-msg"></p>
+    <div class="comp-xp"><span>⚡</span><span id="comp-xp">+0 XP</span></div>
+    <div id="comp-badges" style="margin-bottom:1.25rem;display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center;"></div>
+    <div class="comp-actions">
       <button class="btn btn-secondary" onclick="location.href='map.html'">← Map</button>
-      <button class="btn btn-primary" id="completion-next-btn" onclick="goNext()">Next Lesson →</button>
+      <button class="btn btn-primary"   id="comp-next-btn" onclick="goNextLesson()">Next Lesson →</button>
     </div>
   </div>
 </div>
 
+<!-- Scripts — order matters -->
 <script src="js/config.js"></script>
 <script src="js/lesson-data.js"></script>
 <script src="js/progress.js"></script>
@@ -73,245 +305,362 @@
 <script src="js/ai-mark.js"></script>
 <script>
 
-const lessonId = getParam('id');
-let _lesson    = null;
-let _nextLesson = null;
-let _challengeEditor = null;
-let _practiceScore   = 0;
-let _practiceTotal   = 0;
-let _practiceIdx     = 0;
+// ─── Safe fallbacks — guards against any script failing to load ───────────────
+if (typeof requireLogin   === 'undefined') window.requireLogin   = function(){};
+if (typeof getNextLesson  === 'undefined') window.getNextLesson  = function(){ return null; };
+if (typeof escapeHtml     === 'undefined') window.escapeHtml     = function(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+if (typeof highlightAll   === 'undefined') window.highlightAll   = function(){ if(typeof hljs!=='undefined') document.querySelectorAll('pre code').forEach(function(b){ hljs.highlightElement(b); }); };
+if (typeof ALL_BADGES     === 'undefined') window.ALL_BADGES     = [];
+if (typeof LESSON_MAP     === 'undefined') window.LESSON_MAP     = {};
+if (typeof quickMark      === 'undefined') window.quickMark      = function(){ alert('AI marking not loaded.'); };
 
-// ─── Init ─────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  // requireLogin() will redirect to index.html if not authenticated after grace period
-  requireLogin();
+// ─── Page state ───────────────────────────────────────────────────────────────
+var lessonId      = null;
+var _lesson       = null;
+var _nextLesson   = null;
+var _steps        = [];
+var _stepIdx      = 0;
+var _lessonEditor = null;
+var _correctCount = 0;
 
+// ─── Init on DOM ready ────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+
+  // Read lesson ID from URL
+  lessonId = new URLSearchParams(location.search).get('id');
+
+  // Auth gate
+  if (typeof requireLogin === 'function') requireLogin();
+
+  // Validate lesson
   if (!lessonId || !LESSON_MAP[lessonId]) {
-    document.getElementById('lesson-body').innerHTML =
-      '<div style="padding:3rem;text-align:center;"><h2>Lesson not found</h2><a href="map.html" class="btn btn-primary">← Back to Map</a></div>';
+    document.getElementById('lesson-left').innerHTML =
+      '<div style="padding:3rem;text-align:center;">' +
+        '<h2>Lesson not found</h2>' +
+        '<p style="color:var(--muted);margin:.75rem 0 1.5rem">ID: ' + (lessonId || '(none)') + '</p>' +
+        '<a href="map.html" class="btn btn-primary">← Back to Map</a>' +
+      '</div>';
     return;
   }
 
-  const info = LESSON_MAP[lessonId];
-  _lesson    = info.lesson;
-  _nextLesson = getNextLesson(lessonId);
+  var info    = LESSON_MAP[lessonId];
+  _lesson     = info.lesson;
+  _nextLesson = (typeof getNextLesson === 'function') ? getNextLesson(lessonId) : null;
 
-  document.title = `${_lesson.title} — PyLearn`;
-  document.getElementById('lesson-xp-label').textContent = _lesson.xp;
+  document.title = _lesson.title + ' — PyLearn';
+  document.getElementById('l-xp-label').textContent = _lesson.xp;
 
-  if (_lesson.type === 'learn')     renderLearn();
-  else if (_lesson.type === 'practice') renderPractice();
+  // Init CodeMirror editor
+  _lessonEditor        = initEditor('l-editor', { autofocus: false });
+  window._lessonEditor = _lessonEditor;  // picked up by tryCode() in main.js
+
+  // Load Pyodide
+  loadPyodideRuntime('l-status', 'l-run-btn');
+
+  // Render by type
+  if (_lesson.type === 'learn')          renderLearn();
+  else if (_lesson.type === 'practice')  renderPractice();
   else if (_lesson.type === 'challenge') renderChallenge();
+
 });
 
-// ─── LEARN mode ───────────────────────────────────────────────────────────────
-function renderLearn() {
-  const body = document.getElementById('lesson-body');
-  body.innerHTML = `
-    <div class="learn-content" id="learn-content">
-      ${_lesson.content}
-      <div style="margin-top:2.5rem;padding-top:2rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
-        <a href="map.html" class="btn btn-secondary btn-sm">← Back to Map</a>
-        <button class="btn btn-green" onclick="completeLesson()">
-          ✓ Mark Complete &amp; Continue
-        </button>
-      </div>
-    </div>`;
-
-  // Syntax highlight
-  hljs.configure({ ignoreUnescapedHTML: true });
-  highlightAll();
-
-  // Set up inline IDE for "Try it" buttons
-  // Inject a mini IDE below the content
-  const inlineIDE = document.createElement('div');
-  inlineIDE.id = 'inline-ide-wrap';
-  inlineIDE.style.cssText = `
-    position:sticky; bottom:0; background:var(--bg2);
-    border-top:1px solid var(--border); overflow:hidden;
-    display:flex; flex-direction:column;
-  `;
-  inlineIDE.innerHTML = `
-    <div class="ide-bar">
-      <span class="ide-bar-title" style="font-size:.7rem">🐍 Try it here — click "▶ Try it" on any example above</span>
-      <button class="ide-run-btn" id="learn-run-btn" disabled onclick="runCode(_inlineEditor,'learn-output','learn-run-btn','learn-runtime')">▶ Run</button>
-      <button class="ide-small-btn" onclick="clearOutput('learn-output','learn-runtime')">Clear</button>
-      <button class="ide-small-btn" onclick="changeFontSize(-1)">A−</button>
-      <button class="ide-small-btn" onclick="changeFontSize(1)">A+</button>
-      <span class="ide-bar-title" id="learn-runtime" style="margin-left:auto"></span>
-    </div>
-    <div style="height:200px;position:relative;">
-      <textarea id="learn-editor"># Click "▶ Try it" on a code example above, or write your own Python here!</textarea>
-    </div>
-    <div class="ide-status loading" id="learn-status">⏳ Loading Python…</div>
-    <pre id="learn-output" class="ide-output" style="max-height:120px;border-top:1px solid var(--border);"></pre>
-  `;
-
-  document.querySelector('.lesson-body').appendChild(inlineIDE);
-
-  // Init CodeMirror
-  _inlineEditor = initEditor('learn-editor', { autofocus: false });
-  window._inlineEditor = _inlineEditor;
-
-  // Load Pyodide for the inline IDE
-  loadPyodideRuntime('learn-status', 'learn-run-btn').then(() => {
-    _editor = _inlineEditor; // alias for runCode()
-  });
-
-  setLessonProgress(50);
+// ─── IDE wrappers ─────────────────────────────────────────────────────────────
+function runLesson() {
+  runCode(_lessonEditor, 'l-output', 'l-run-btn', 'l-runtime', 'l-status');
+}
+function clearLessonOutput() {
+  clearOutput('l-output', 'l-runtime');
+}
+function runAIMark() {
+  var code = _lessonEditor ? _lessonEditor.getValue() : '';
+  var task = (_lesson && _lesson.task) ? _lesson.task : '';
+  var btn  = document.getElementById('l-ai-btn');
+  var out  = document.getElementById('l-ai-out');
+  quickMark(code, task, btn, out);
 }
 
-// ─── PRACTICE mode ────────────────────────────────────────────────────────────
-let _currentQ     = 0;
-let _correctCount = 0;
+// ─── LEARN mode — step by step ────────────────────────────────────────────────
+function renderLearn() {
+  _steps   = parseSteps(_lesson.content);
+  _stepIdx = 0;
+  document.getElementById('ide-pane-title').textContent = '🐍 Try It — click ▶ Try it on any example';
+  showStep(0);
+}
 
+function parseSteps(html) {
+  // Split content at every <h2 boundary, keeping the h2 with its chunk
+  var parts = (html || '').split(/(?=<h2[\s>])/i);
+  return parts.map(function(p){ return p.trim(); }).filter(function(p){ return p.length > 0; });
+}
+
+function showStep(idx) {
+  var total = _steps.length;
+  _stepIdx  = idx;
+
+  // Progress
+  var pct = Math.round((idx / Math.max(total - 1, 1)) * 85);
+  setLessonProgress(pct);
+  document.getElementById('l-step-label').textContent =
+    idx === 0 ? 'Intro' : 'Step ' + idx + ' of ' + (total - 1);
+
+  // Build HTML — show all steps revealed so far
+  var html = '<div class="step-card">';
+
+  for (var i = 0; i <= idx; i++) {
+    var chunk = _steps[i];
+    if (i === 0) {
+      html += '<div class="step-chunk"><div class="step-intro">📚 Learn Lesson</div>' + chunk + '</div>';
+    } else {
+      // Inject step number badge into h2
+      chunk = chunk.replace(/^(<h2[^>]*>)/i, '$1<span class="step-num">' + i + '</span> ');
+      html += '<div class="step-chunk">' + chunk + '</div>';
+    }
+  }
+
+  var isLast = (idx === total - 1);
+
+  if (!isLast) {
+    html += '<div class="step-actions">' +
+      '<span style="font-size:.82rem;color:var(--muted)">' + (idx + 1) + ' of ' + (total - 1) + ' steps</span>' +
+      '<button class="btn btn-primary" onclick="advanceStep()">Continue →</button>' +
+    '</div>';
+  } else {
+    html += renderMiniChallenge();
+    html += '<div class="step-actions">' +
+      '<a href="map.html" class="btn btn-secondary btn-sm">← Map</a>' +
+      '<button class="btn btn-green" onclick="completeLesson()">✓ Mark Complete +' + _lesson.xp + ' XP</button>' +
+    '</div>';
+  }
+
+  html += '</div>';
+  document.getElementById('lesson-left').innerHTML = html;
+
+  // Syntax highlight
+  if (typeof hljs !== 'undefined') {
+    hljs.configure({ ignoreUnescapedHTML: true });
+    highlightAll();
+  }
+
+  // Scroll content pane to show new step
+  if (idx > 0) {
+    var pane = document.getElementById('lesson-left');
+    setTimeout(function() {
+      pane.scrollTo({ top: pane.scrollHeight, behavior: 'smooth' });
+    }, 60);
+  }
+}
+
+function advanceStep() {
+  if (_stepIdx < _steps.length - 1) showStep(_stepIdx + 1);
+}
+
+function renderMiniChallenge() {
+  // Find the challenge lesson in the same topic
+  var info            = LESSON_MAP[lessonId];
+  var topic           = info ? info.topic : null;
+  var challengeLesson = topic ? topic.lessons.filter(function(l){ return l.type === 'challenge'; })[0] : null;
+
+  if (!challengeLesson) {
+    return '<div class="mini-challenge">' +
+      '<h3>💻 Try It in the IDE!</h3>' +
+      '<p>Experiment with what you just learned — use the IDE on the right.</p>' +
+      '<button class="try-in-ide-btn" onclick="loadFirstExample()">▶ Load first example</button>' +
+    '</div>';
+  }
+
+  window._challengeStarter = challengeLesson.starter || '';
+
+  var descHtml = '';
+  if (challengeLesson.description) {
+    var lines = challengeLesson.description.split('\n').filter(function(l){ return l.trim(); });
+    descHtml = '<ul>' + lines.map(function(l){ return '<li>' + l.replace(/^\d+\.\s*/,'') + '</li>'; }).join('') + '</ul>';
+  }
+
+  return '<div class="mini-challenge">' +
+    '<h3>💻 Now Try It Yourself!</h3>' +
+    '<p>' + (challengeLesson.task || 'Apply what you just learned!') + '</p>' +
+    descHtml +
+    '<button class="try-in-ide-btn" onclick="loadStarterCode()">▶ Load starter code into IDE</button>' +
+  '</div>';
+}
+
+function loadStarterCode() {
+  if (_lessonEditor && window._challengeStarter) {
+    _lessonEditor.setValue(window._challengeStarter);
+    _lessonEditor.focus();
+  }
+}
+
+function loadFirstExample() {
+  var code = document.querySelector('#lesson-left pre code');
+  if (code && _lessonEditor) {
+    _lessonEditor.setValue(code.innerText.trim());
+    _lessonEditor.focus();
+  }
+}
+
+// ─── PRACTICE mode — quiz ─────────────────────────────────────────────────────
 function renderPractice() {
-  const body = document.getElementById('lesson-body');
-  _currentQ     = 0;
+  // Hide IDE pane — quiz doesn't need it
+  document.getElementById('lesson-right').style.display = 'none';
+  document.getElementById('lesson-cols').style.gridTemplateColumns = '1fr';
+
+  var pane = document.getElementById('lesson-left');
+  pane.style.maxWidth = '660px';
+  pane.style.margin   = '0 auto';
+
   _correctCount = 0;
-  body.innerHTML = `<div class="practice-wrap" id="practice-wrap"></div>`;
   showQuestion(0);
-  setLessonProgress(0);
 }
 
 function showQuestion(idx) {
-  const q = _lesson.questions[idx];
-  if (!q) { finishPractice(); return; }
+  var questions = _lesson.questions || [];
+  var total     = questions.length;
+  var q         = questions[idx];
+  if (!q) { finishPractice(total); return; }
 
-  const total = _lesson.questions.length;
-  const letters = ['A', 'B', 'C', 'D'];
   setLessonProgress(Math.round((idx / total) * 80));
+  document.getElementById('l-step-label').textContent = 'Question ' + (idx + 1) + ' of ' + total;
 
-  document.getElementById('practice-wrap').innerHTML = `
-    <div class="practice-q-counter">Question ${idx + 1} of ${total}</div>
-    <div class="practice-question">${q.q.replace(/\n/g, '<br>')}</div>
-    <div class="practice-opts">
-      ${q.options.map((opt, i) => `
-        <button class="practice-opt" onclick="answerQ(this, ${i}, ${q.answer}, '${(q.explanation||'').replace(/'/g, "\\'")}', ${idx})">
-          <span class="opt-letter">${letters[i]}</span>${opt}
-        </button>`).join('')}
-    </div>
-    <div class="practice-feedback" id="prac-fb"></div>
-  `;
+  var letters = ['A','B','C','D'];
+  var optsHtml = q.options.map(function(opt, i) {
+    var safeExp = (q.explanation || '').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,' ');
+    return '<button class="practice-opt" onclick="answerQ(this,' + i + ',' + q.answer + ',\'' + safeExp + '\',' + idx + ')">' +
+      '<span class="opt-letter">' + letters[i] + '</span>' + escapeHtml(opt) +
+    '</button>';
+  }).join('');
+
+  document.getElementById('lesson-left').innerHTML =
+    '<div class="practice-pane">' +
+      '<div style="font-family:var(--mono);font-size:.73rem;color:var(--muted);margin-bottom:1.25rem">' +
+        _lesson.title + ' · Question ' + (idx + 1) + ' of ' + total +
+      '</div>' +
+      '<div style="font-size:1.05rem;font-weight:800;line-height:1.6;margin-bottom:1.75rem;color:var(--text)">' +
+        q.q.replace(/\n/g,'<br>') +
+      '</div>' +
+      '<div style="display:flex;flex-direction:column;gap:.65rem">' + optsHtml + '</div>' +
+      '<div class="practice-feedback" id="prac-fb" style="display:none"></div>' +
+    '</div>';
 }
 
 function answerQ(btn, chosen, correct, explanation, idx) {
-  const opts = document.querySelectorAll('.practice-opt');
-  opts.forEach(o => o.disabled = true);
+  document.querySelectorAll('.practice-opt').forEach(function(o){ o.disabled = true; });
 
-  const isRight = chosen === correct;
+  var isRight = chosen === correct;
   if (isRight) _correctCount++;
 
   btn.classList.add(isRight ? 'correct' : 'wrong');
-  opts[correct].classList.add('correct');
+  var opts = document.querySelectorAll('.practice-opt');
+  if (opts[correct]) opts[correct].classList.add('correct');
 
-  const fb = document.getElementById('prac-fb');
-  fb.className = 'practice-feedback ' + (isRight ? 'correct' : 'wrong');
-  fb.innerHTML = (isRight ? '✅ ' : '❌ ') + explanation;
-  fb.style.display = 'block';
+  var fb = document.getElementById('prac-fb');
+  if (fb) {
+    fb.className  = 'practice-feedback ' + (isRight ? 'correct' : 'wrong');
+    fb.innerHTML  = (isRight ? '✅ ' : '❌ ') + explanation;
+    fb.style.display = 'block';
 
-  const nextBtn = document.createElement('button');
-  nextBtn.className = 'btn btn-primary btn-sm';
-  nextBtn.style.cssText = 'margin-top:1rem;';
-  nextBtn.textContent = idx < _lesson.questions.length - 1 ? 'Next Question →' : 'See Results';
-  nextBtn.onclick = () => showQuestion(idx + 1);
-  fb.appendChild(document.createElement('br'));
-  fb.appendChild(nextBtn);
+    var total  = (_lesson.questions || []).length;
+    var isLast = idx === total - 1;
+    var nextBtn = document.createElement('button');
+    nextBtn.className   = 'btn btn-primary btn-sm';
+    nextBtn.style.marginTop = '1rem';
+    nextBtn.textContent = isLast ? 'See Results' : 'Next →';
+    nextBtn.onclick = function(){ showQuestion(idx + 1); };
+    fb.appendChild(document.createElement('br'));
+    fb.appendChild(nextBtn);
+  }
 }
 
-function finishPractice() {
-  const all = _lesson.questions.length;
-  const pct = Math.round((_correctCount / all) * 100);
-  document.getElementById('practice-wrap').innerHTML = `
-    <div style="text-align:center;padding:2rem 0;">
-      <div style="font-size:3.5rem;margin-bottom:1rem">${pct === 100 ? '🏆' : pct >= 60 ? '👍' : '💪'}</div>
-      <h2 style="font-size:1.5rem;font-weight:900;margin-bottom:.5rem">Quiz Complete!</h2>
-      <p style="color:var(--muted);margin-bottom:2rem">${_correctCount} / ${all} correct (${pct}%)</p>
-      <button class="btn btn-green" onclick="completeLesson()">Continue +${_lesson.xp} XP →</button>
-    </div>`;
+function finishPractice(total) {
+  var pct = total > 0 ? Math.round((_correctCount / total) * 100) : 0;
   setLessonProgress(100);
+  document.getElementById('l-step-label').textContent = 'Complete!';
+  document.getElementById('lesson-left').innerHTML =
+    '<div class="practice-pane" style="text-align:center;padding:2rem 0">' +
+      '<div style="font-size:3.5rem;margin-bottom:1rem">' + (pct===100?'🏆':pct>=60?'👍':'💪') + '</div>' +
+      '<h2 style="font-size:1.4rem;font-weight:900;margin-bottom:.5rem">Quiz Complete!</h2>' +
+      '<p style="color:var(--muted);margin-bottom:2rem">' + _correctCount + ' / ' + total + ' correct (' + pct + '%)</p>' +
+      '<div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap">' +
+        '<a href="map.html" class="btn btn-secondary">← Map</a>' +
+        '<button class="btn btn-green" onclick="completeLesson()">Continue +' + _lesson.xp + ' XP →</button>' +
+      '</div>' +
+    '</div>';
 }
 
 // ─── CHALLENGE mode ───────────────────────────────────────────────────────────
 function renderChallenge() {
-  const body = document.getElementById('lesson-body');
-  body.innerHTML = `
-    <div class="challenge-layout">
-      <div class="challenge-task">
-        <h2>🎯 ${_lesson.task || 'Your Challenge'}</h2>
-        <p>${(_lesson.description || '').replace(/\n/g, '<br>')}</p>
-        ${_lesson.example_output ? `
-          <h3 style="font-size:.875rem;font-weight:700;margin-top:1.25rem;margin-bottom:.5rem">Expected Output:</h3>
-          <div class="expected-output">${escapeHtml(_lesson.example_output)}</div>
-        ` : ''}
-        <div style="margin-top:1.5rem;">
-          <button class="btn btn-green btn-sm" onclick="completeLesson()">✓ Mark Complete</button>
-        </div>
-        <!-- AI marking output -->
-        <div class="ai-output" id="challenge-ai-out" style="margin-top:1rem;padding:0;"></div>
-      </div>
-      <div class="challenge-ide">
-        <div class="ide-bar">
-          <span class="ide-bar-title">challenge.py</span>
-          <button class="ide-run-btn" id="chal-run-btn" disabled onclick="runCode(_challengeEditor,'chal-output','chal-run-btn','chal-runtime')">▶ Run</button>
-          <button class="ide-small-btn" onclick="clearOutput('chal-output','chal-runtime')">Clear</button>
-          <button class="ai-mark-btn" onclick="quickMark(_challengeEditor?.getValue(),'${(_lesson.task||'').replace(/'/g,"\\'")  }',this,document.getElementById('challenge-ai-out'))">🤖 Mark My Code</button>
-          <span class="ide-bar-title" id="chal-runtime" style="margin-left:auto"></span>
-        </div>
-        <div style="flex:1;overflow:hidden;position:relative;">
-          <textarea id="chal-editor">${escapeHtml(_lesson.starter || '# Write your solution here\n')}</textarea>
-        </div>
-        <div class="ide-status loading" id="chal-status">⏳ Loading Python…</div>
-        <pre id="chal-output" class="ide-output" style="max-height:200px;border-top:1px solid var(--border);"></pre>
-      </div>
-    </div>`;
+  setLessonProgress(20);
+  document.getElementById('l-step-label').textContent = 'Challenge';
 
-  _challengeEditor = initEditor('chal-editor', { autofocus: true });
-  _editor = _challengeEditor;
+  var pane = document.getElementById('lesson-left');
+  pane.classList.add('challenge-left');
 
-  loadPyodideRuntime('chal-status', 'chal-run-btn');
-  setLessonProgress(30);
-}
+  var expOut = _lesson.example_output
+    ? '<div style="font-size:.82rem;font-weight:700;margin:1.25rem 0 .4rem;color:var(--text)">Expected output:</div>' +
+      '<div class="expected-output">' + escapeHtml(_lesson.example_output) + '</div>'
+    : '';
 
-// ─── Complete lesson ──────────────────────────────────────────────────────────
-async function completeLesson() {
-  const result = await Progress.markComplete(lessonId, _lesson.xp);
+  pane.innerHTML =
+    '<div>' +
+      '<div style="font-family:var(--mono);font-size:.7rem;color:var(--blue);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.5rem">💻 Challenge</div>' +
+      '<h2>🎯 ' + (_lesson.task || 'Your Challenge') + '</h2>' +
+      '<p>' + (_lesson.description || '').replace(/\n/g,'<br>') + '</p>' +
+      expOut +
+      '<div style="margin-top:1.5rem">' +
+        '<button class="btn btn-green btn-sm" onclick="completeLesson()">✓ Mark Complete</button>' +
+      '</div>' +
+    '</div>';
 
-  setLessonProgress(100);
-
-  // Show completion screen
-  const screen = document.getElementById('completion-screen');
-  document.getElementById('completion-emoji').textContent =
-    _lesson.type === 'challenge' ? '🏆' : _lesson.type === 'practice' ? '✅' : '🎉';
-  document.getElementById('completion-title').textContent = 'Lesson Complete!';
-  document.getElementById('completion-msg').textContent =
-    result.xpGained === 0 ? 'Already completed — no XP awarded.' : `Great work on "${_lesson.title}"!`;
-  document.getElementById('completion-xp').textContent = `+${result.xpGained} XP`;
-
-  // Show new badges
-  const badgesEl = document.getElementById('completion-badges');
-  if (result.newBadges?.length) {
-    badgesEl.innerHTML = result.newBadges.map(id => {
-      const b = ALL_BADGES.find(x => x.id === id);
-      return b ? `<div class="badge earned" style="margin:.2rem auto;display:inline-flex">${b.icon} ${b.name}</div>` : '';
-    }).join('');
-  } else {
-    badgesEl.innerHTML = '';
+  if (_lesson.starter && _lessonEditor) {
+    _lessonEditor.setValue(_lesson.starter);
   }
 
-  document.getElementById('completion-next-btn').style.display = _nextLesson ? '' : 'none';
-  screen.classList.add('show');
+  document.getElementById('ide-pane-title').textContent = 'challenge.py';
 }
 
-function goNext() {
-  if (_nextLesson) location.href = `lesson.html?id=${_nextLesson.id}`;
+// ─── Completion ───────────────────────────────────────────────────────────────
+function completeLesson() {
+  if (typeof Progress === 'undefined') {
+    document.getElementById('completion-screen').classList.add('show');
+    return;
+  }
+  Progress.markComplete(lessonId, _lesson.xp).then(function(result) {
+    setLessonProgress(100);
+
+    document.getElementById('comp-emoji').textContent =
+      _lesson.type === 'challenge' ? '🏆' : _lesson.type === 'practice' ? '✅' : '🎉';
+    document.getElementById('comp-title').textContent = 'Lesson Complete!';
+    document.getElementById('comp-msg').textContent   =
+      result.xpGained === 0
+        ? 'Already completed — no XP this time.'
+        : 'Great work on "' + _lesson.title + '"!';
+    document.getElementById('comp-xp').textContent = '+' + result.xpGained + ' XP';
+
+    var badgesEl = document.getElementById('comp-badges');
+    if (badgesEl) {
+      badgesEl.innerHTML = (result.newBadges || []).map(function(id) {
+        var b = ALL_BADGES.filter(function(x){ return x.id === id; })[0];
+        return b ? '<div class="badge earned">' + b.icon + ' ' + b.name + '</div>' : '';
+      }).join('');
+    }
+
+    var nextBtn = document.getElementById('comp-next-btn');
+    if (nextBtn) nextBtn.style.display = _nextLesson ? '' : 'none';
+    document.getElementById('completion-screen').classList.add('show');
+  });
+}
+
+function goNextLesson() {
+  if (_nextLesson) location.href = 'lesson.html?id=' + _nextLesson.id;
   else location.href = 'map.html';
 }
 
-// ─── Progress bar ─────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 function setLessonProgress(pct) {
-  document.getElementById('lesson-progress').style.width = pct + '%';
+  var el = document.getElementById('l-progress');
+  if (el) el.style.width = pct + '%';
 }
+
 </script>
 </body>
 </html>
